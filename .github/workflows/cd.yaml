@@ -25,3 +25,7 @@ jobs:
 
       - name: Deploy
         run: pm2 deploy ecosystem.config.cjs production
+        env:
+          BPW_USER: ${{ vars.BPW_USER }}
+          BPW_HOST: ${{ vars.BPW_HOST }}
+          BPW_PATH: ${{ vars.BPW_PATH }}
