@@ -17,7 +17,7 @@ jobs:
           DEPLOY_KEY: ${{secrets.DEPLOY_KEY}}
 
       - name: Install PM2
-        run: npm i pm2
+        run: npm i -g pm2
 
       - name: Deploy
         run: pm2 deploy ecosystem.config.js production
