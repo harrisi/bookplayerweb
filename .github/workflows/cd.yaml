@@ -16,9 +16,11 @@ jobs:
           mkdir -p ~/.ssh/
           echo "$DEPLOY_KEY" > ./deploy.key
           sudo chmod 600 ./deploy.key
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
         shell: bash
         env:
-          DEPLOY_KEY: ${{secrets.DEPLOY_KEY}}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
 
       - name: Install PM2
         run: npm i -g pm2
