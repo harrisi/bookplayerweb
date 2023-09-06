@@ -1,7 +1,7 @@
 .PHONY: install build preview deploy run clean
 
 install: 
-	ln -s ./scripts/pre-push .git/hooks/pre-push
+	ln -s ${PWD}/scripts/pre-push .git/hooks/pre-push
 
 run:
 	npm run dev
