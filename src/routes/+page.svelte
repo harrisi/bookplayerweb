@@ -9,6 +9,31 @@
     scriptEl.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js'
     // scriptEl.defer = true
     document.body.append(scriptEl)
+    document.addEventListener('AppleIDSignInOnSuccess', async event => {
+      // Handle successful response.
+      console.log('success')
+      console.dir(event);
+      const f = await fetch('https://api.tortugapower.com/v1/user/login',
+        {
+          body: JSON.stringify({
+            token_id: event.detail.authorization.id_token,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        }
+      ).then(resp => resp.text())
+      .catch(error => error)
+      console.log(f)
+    });
+
+    // Listen for authorization failures.
+    document.addEventListener('AppleIDSignInOnFailure', (event) => {
+      // Handle error.
+      console.log('failure')
+      console.dir(event);
+    });
   })
 </script>
 
