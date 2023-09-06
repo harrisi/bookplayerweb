@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+npm run build
+
+# I'm not quite sure why I need this.
+echo '{"type":"module"}' > build/package.json
+
+mkdir deploy &> /dev/null
+tar czf deploy/bp.tar.gz build
+scp deploy/bp.tar.gz $BP_SFTP_ADDRESS:
+
+#
+ssh $BP_SSH_ADDRESS /bin/bash << EOF
+tar xzf bp.tar.gz -C $BP_DIR --strip-components=1
+PORT=3001 pm2 start $BP_DIR/index.js --name bp
+pm2 save
+EOF
+
+exit $?
