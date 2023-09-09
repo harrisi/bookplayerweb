@@ -17,6 +17,7 @@ export async function POST({ cookies, request }) {
     }
   ).then(resp => resp.text())
   .catch(error => error)
+  console.log(f)
   const { token } = f
 
   cookies.set('id_token', token)
