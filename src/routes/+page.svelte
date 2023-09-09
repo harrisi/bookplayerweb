@@ -1,39 +1,54 @@
 <script>
+  import { goto } from '$app/navigation'
+  import { page } from '$app/stores'
   import { onMount } from 'svelte'
   export let data
+  import { dev } from '$app/environment'
 
   const { nonce } = data
   onMount(() => {
-    const scriptEl = document.createElement('script')
-    scriptEl.type = 'text/javascript'
-    scriptEl.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js'
-    // scriptEl.defer = true
-    document.body.append(scriptEl)
-    document.addEventListener('AppleIDSignInOnSuccess', async event => {
-      // Handle successful response.
-      console.log('success')
-      console.dir(event);
-      const f = await fetch('https://api.tortugapower.com/v1/user/login',
-        {
-          body: JSON.stringify({
-            token_id: event.detail.authorization.id_token,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
+    if (dev) {
+      const signin = /** @type {HTMLDivElement} */ (document.querySelector('#appleid-signin'))
+      signin.style.backgroundColor = 'red'
+      signin.style.width = '100px'
+      signin.style.height = '100px'
+      signin.addEventListener('click', () => {
+        const event = new CustomEvent('AppleIDSignInOnSuccess', {
+          detail: {
+            authorization: {
+              id_token: 'some_jwt',
+              code: 'some.other.code',
+            },
           },
-          method: 'POST',
-        }
-      ).then(resp => resp.text())
-      .catch(error => error)
-      console.log(f)
-    });
+        })
+        document.dispatchEvent(event)
+      })
+    } else {
+      const scriptEl = document.createElement('script')
+      scriptEl.type = 'text/javascript'
+      scriptEl.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js'
+      document.body.append(scriptEl)
+    }
+
+    document.addEventListener('AppleIDSignInOnSuccess', async event => {
+      fetch('/auth', {
+        body: `id_token=${event.detail.authorization.id_token}`,
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      })
+      .then(resp => {
+        goto('/player')
+      })
+      .catch(async resp => {
+        console.log(await resp.text())
+      })
+    })
 
     // Listen for authorization failures.
     document.addEventListener('AppleIDSignInOnFailure', (event) => {
       // Handle error.
       console.log('failure')
-      console.dir(event);
-    });
+    })
   })
 </script>
 
