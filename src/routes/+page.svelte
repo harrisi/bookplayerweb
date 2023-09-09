@@ -32,9 +32,11 @@
 
     document.addEventListener('AppleIDSignInOnSuccess', async event => {
       fetch('/auth', {
-        body: `id_token=${event.detail.authorization.id_token}`,
+        body: `${encodeURIComponent('id_token')}=${encodeURIComponent(event.detail.authorization.id_token)}`,
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
       })
       .then(resp => {
         goto('/player')

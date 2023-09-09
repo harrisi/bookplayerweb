@@ -12,14 +12,14 @@ export async function POST({ cookies, request }) {
       }),
       headers: {
         'Content-Type': 'application/json',
+        'Origin': 'https://bp.fofgof.xyz'
       },
       method: 'POST',
     }
-  ).then(resp => resp.text())
+  ).then(async resp => await resp.json())
   .catch(error => error)
-  console.log(f)
   const { token } = f
 
-  cookies.set('id_token', token)
+  cookies.set('token', token)
   return json({status: 200})
 }
