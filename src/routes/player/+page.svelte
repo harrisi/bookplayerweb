@@ -1,5 +1,6 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount } from 'svelte'
+    import { dev } from '$app/environment'
 
   export let data
   const { token } = data
