@@ -22,7 +22,7 @@
         },
       })
       .then(resp => {
-        goto('/player')
+        goto('/library')
       })
       .catch(async resp => {
         console.log(await resp.text())
