@@ -1,36 +1,19 @@
 <script>
   import { goto } from '$app/navigation'
-  import { page } from '$app/stores'
   import { onMount } from 'svelte'
   export let data
-  import { dev } from '$app/environment'
 
-  const { nonce } = data
+  const { nonce, token } = data
+
   onMount(() => {
-    if (dev) {
-      const signin = /** @type {HTMLDivElement} */ (document.querySelector('#appleid-signin'))
-      signin.style.backgroundColor = 'red'
-      signin.style.width = '100px'
-      signin.style.height = '100px'
-      signin.addEventListener('click', () => {
-        const event = new CustomEvent('AppleIDSignInOnSuccess', {
-          detail: {
-            authorization: {
-              id_token: 'some_jwt',
-              code: 'some.other.code',
-            },
-          },
-        })
-        document.dispatchEvent(event)
-      })
-    } else {
-      const scriptEl = document.createElement('script')
-      scriptEl.type = 'text/javascript'
-      scriptEl.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js'
-      document.body.append(scriptEl)
-    }
+    if (token) goto('/library')
+    const scriptEl = document.createElement('script')
+    scriptEl.type = 'text/javascript'
+    scriptEl.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js'
+    document.body.append(scriptEl)
 
     document.addEventListener('AppleIDSignInOnSuccess', async event => {
+      console.dir(event)
       fetch('/auth', {
         body: `${encodeURIComponent('id_token')}=${encodeURIComponent(event.detail.authorization.id_token)}`,
         method: 'POST',
@@ -48,9 +31,13 @@
 
     // Listen for authorization failures.
     document.addEventListener('AppleIDSignInOnFailure', (event) => {
+      console.dir(event)
       // Handle error.
       console.log('failure')
     })
+
+    // so the script isn't added repeatedly on hmr
+    return () => scriptEl.remove()
   })
 </script>
 
@@ -68,3 +55,6 @@
 <p>This is a web front end for <a href="https://github.com/tortugapower/bookplayer">BookPlayer</a></p>
 
 <div id="appleid-signin" data-color="black" data-border="true" data-type="sign in"></div>
+
+<style>
+</style>
