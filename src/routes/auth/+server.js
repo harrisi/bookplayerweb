@@ -21,6 +21,6 @@ export async function POST({ cookies, request }) {
   .catch(error => error)
   const { token } = f
 
-  cookies.set('token', token)
+  cookies.set('token', token, { path: '/' })
   return json({status: 200})
 }

@@ -14,7 +14,7 @@
 
     document.addEventListener('AppleIDSignInOnSuccess', async event => {
       console.dir(event)
-      fetch('/auth', {
+      await fetch('/auth', {
         body: `${encodeURIComponent('id_token')}=${encodeURIComponent(event.detail.authorization.id_token)}`,
         method: 'POST',
         headers: {
