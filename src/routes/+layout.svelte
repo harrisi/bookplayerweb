@@ -8,7 +8,7 @@
     <div id="logo">BookPlayerWeb</div>
     <div id="about">About</div>
     {#if token}
-      <div id="profile">Profile</div>
+      <a href='/auth/logout' id="logout">Logout</a>
     {:else}
       <div id="login">Login</div>
     {/if}
