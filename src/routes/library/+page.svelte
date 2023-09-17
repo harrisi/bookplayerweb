@@ -1,22 +1,38 @@
 <script>
-  import { page } from "$app/stores"
-  import { apiCall } from "$lib"
-  import FolderItem from "./FolderItem.svelte"
+  import { page } from '$app/stores'
+  import { apiCall, library } from '$lib'
+  import { sync } from '$lib/sync'
+  import FolderItem from './FolderItem.svelte'
   import Player from '../player/+page.svelte'
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
+  import { version } from '$app/environment'
   const { token } = $page.data
+  if (!token) goto('/')
   let items
   let root
   let player
 
+  const getSynced = async () => {
+    /** @type {string[]} */
+    const resp = await apiCall('GET', '/library/keys', null, token)
+      .then(res => res.content)
+
+    resp.forEach(e => sync(e, token))
+    // sync(resp[0], token)
+  }
+
   const loadRoot = async () => {
-    const resp = await apiCall('GET', '/library?sign=true', null, token)
+    // we don't want to set `sign` because this modifies the ETag.
+    const resp = await apiCall('GET', '/library', null, token)
 
     root = items = resp.content
   }
 
   /** @param title {string} */
   const folderClick = async title => {
-    const resp = await apiCall('GET', `/library?sign=true&relativePath=${encodeURIComponent(title)}/`, null, token)
+    // we don't want to set `sign` because this modifies the ETag.
+    const resp = await apiCall('GET', `/library?relativePath=${encodeURIComponent(title)}/`, null, token)
     items = resp.content
   }
 
@@ -28,6 +44,8 @@
     }
     player = item
   }
+
+  onMount(getSynced)
 </script>
 
 {#await loadRoot()}
