@@ -1,4 +1,8 @@
 <script>
+    // import { onMount } from "svelte";
+
+  const worker = new Worker('./worker.js', { type: 'module' })
+
   export let
     relativePath, // "foo/bar/{originalFileName}"
     originalFileName, // "3byjackwilliamson_01_williamson_64kb.mp3"
@@ -23,12 +27,17 @@
     const target = /** @type {HTMLAudioElement} */ (e.target)
     target.currentTime = currentTime
   }
+
+  worker.postMessage(relativePath)
+  worker.addEventListener('message', ({ data }) => {
+    url = data
+  })
 </script>
 
 {title}
 <div>
   <img src="{thumbnail}" alt="thumbnail for book"/>
-  <audio controls on:loadedmetadata={loaded}>
+  <audio controls on:loadeddata={loaded}>
     <source src={url} type="audio/mp3">
   </audio>
 </div>
