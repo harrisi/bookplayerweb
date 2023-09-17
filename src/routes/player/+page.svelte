@@ -1,7 +1,7 @@
 <script>
     // import { onMount } from "svelte";
 
-  const worker = new Worker('./worker.js', { type: 'module' })
+  const worker = new Worker(new URL('./worker.js', import.meta.url), {type: 'module'})
 
   export let
     relativePath, // "foo/bar/{originalFileName}"
