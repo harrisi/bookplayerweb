@@ -3,6 +3,10 @@
   const { token } = data
 </script>
 
+<svelte:head>
+  <link rel="manifest" href="manifest.json" />
+</svelte:head>
+
 <header>
   <nav>
     <div id="logo">BookPlayerWeb</div>
