@@ -30,7 +30,8 @@ const syncObj = async e => {
       }).then(res => res.json()).then(res => res.content[0])
       const file = await fetch(url).then(res => res.blob()).catch(err => console.error(err))
       const buf = await file?.arrayBuffer()
-      ah.write(buf)
+      // this is annoying, but currently (2023-09-18) chromium-based browsers don't implement the spec correctly and don't accept ArrayBuffers.
+      ah.write(new DataView(buf))
       ah.close()
     }
   } else {
