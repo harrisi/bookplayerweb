@@ -1,5 +1,3 @@
-import { sync } from '$lib/sync'
-
 const get = async ({ data }) => {
   const { relativePath, token } = data
   const root = await navigator.storage.getDirectory()
