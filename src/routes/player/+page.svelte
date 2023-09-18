@@ -1,5 +1,8 @@
 <script>
-    // import { onMount } from "svelte";
+  import { onDestroy } from "svelte";
+  import { page } from "$app/stores";
+  const { token } = $page.data
+  // import { onMount } from "svelte";
 
   const worker = new Worker(new URL('./worker.js', import.meta.url), {type: 'module'})
 
@@ -23,21 +26,44 @@
     expires_in // 1695267885
 
   /** @param e {Event} */
-  const loaded = e => {
+  const canplay = e => {
     const target = /** @type {HTMLAudioElement} */ (e.target)
     target.currentTime = currentTime
   }
 
-  worker.postMessage(relativePath)
+  let loading = false
+
+  worker.postMessage({ relativePath, token })
   worker.addEventListener('message', ({ data }) => {
+    if (data.length === 0) {
+      loading = true
+      setTimeout(() => {
+        worker.postMessage({ relativePath, token })
+      }, 500)
+      return
+    }
+    loading = false
+
+    // I don't believe this will throw, so just blindly revoke whatever to save memory
+    URL.revokeObjectURL(url)
     url = data
+    document.querySelector('source').src = url
+    document.querySelector('audio')?.play()
+  })
+
+  onDestroy(() => {
+    URL.revokeObjectURL(url)
   })
 </script>
+
+{#if loading}
+<h1>LOADING...</h1>
+{/if}
 
 {title}
 <div>
   <img src="{thumbnail}" alt="thumbnail for book"/>
-  <audio controls on:loadeddata={loaded}>
+  <audio controls on:canplay={canplay}>
     <source src={url} type="audio/mp3">
   </audio>
 </div>

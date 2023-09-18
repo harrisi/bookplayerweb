@@ -14,6 +14,7 @@
   let player
 
   const getSynced = async () => {
+    return;
     /** @type {string[]} */
     const resp = await apiCall('GET', '/library/keys', null, token)
       .then(res => res.content)
@@ -36,7 +37,8 @@
     items = resp.content
   }
 
-  const setPlayer = item => {
+  const setPlayer = async item => {
+    await sync(item.relativePath, token)
     const audio = document.querySelector('audio')
     if (audio) {
       audio.src = ''
@@ -45,7 +47,7 @@
     player = item
   }
 
-  onMount(getSynced)
+  // onMount(getSynced)
 </script>
 
 {#await loadRoot()}

@@ -30,7 +30,6 @@ const syncObj = async e => {
       }).then(res => res.json()).then(res => res.content[0])
       const file = await fetch(url).then(res => res.blob()).catch(err => console.error(err))
       const buf = await file?.arrayBuffer()
-      console.log('writing buf')
       ah.write(buf)
       ah.close()
     }
