@@ -113,6 +113,10 @@
   //   // a?.addEventListener('volumechange', console.log)
   //   // a?.addEventListener('waiting', console.log)
   })
+
+  window.addEventListener('beforeunload', updateMetadata)
+  document.addEventListener('visibilitychange',
+  () => document.visibilityState === 'hidden' ? updateMetadata : void 0)
 </script>
 
 {#if loading}
