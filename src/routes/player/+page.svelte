@@ -1,11 +1,12 @@
 <script>
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { page } from "$app/stores";
+  import { apiCall } from "$lib";
   const { token } = $page.data
 
   const worker = new Worker(new URL('./worker.js', import.meta.url), {type: 'module'})
 
-  export let
+  export let// args
     relativePath, // "foo/bar/{originalFileName}"
     originalFileName, // "3byjackwilliamson_01_williamson_64kb.mp3"
     title, // "01 - The Cosmic Express",
@@ -23,6 +24,7 @@
     thumbnail, // url | null
     synced, // true,
     expires_in // 1695267885
+  // } = args
 
   /** @param e {Event} */
   const canplay = e => {
@@ -32,6 +34,7 @@
   }
 
   let loading = false
+  let lastUpdate = Date.now()
 
   worker.postMessage({ relativePath, token })
   worker.addEventListener('message', ({ data }) => {
@@ -61,23 +64,44 @@
     }
   })
 
+  const updateMetadata = () => {
+    // don't update more than once every 10s
+    if (Date.now() - lastUpdate < 10000) return
+    lastUpdate = Date.now()
+    apiCall('POST', '/library', {
+      relativePath,
+      // originalFileName,
+      // title,
+      // details,
+      currentTime,
+      // duration,
+      percentCompleted: currentTime / duration,
+      isFinished: Math.abs(currentTime - duration) < 1,
+      // orderRank,
+      // type,
+      lastPlayDateTimestamp: Math.round(Date.now() / 1000),
+      // speed,
+    }, token)
+  }
+
   onDestroy(() => {
     URL.revokeObjectURL(url)
+    updateMetadata()
   })
 
-  // onMount(() => {
-  //   const a = document.querySelector('audio')
+  onMount(() => {
+    const a = document.querySelector('audio')
   //   // a?.addEventListener('audioprocess', console.log)
   //   // a?.addEventListener('canplay', console.log)
   //   // a?.addEventListener('canplaythrough', console.log)
   //   // a?.addEventListener('complete', console.log)
   //   // a?.addEventListener('durationchange', console.log)
-  //   // a?.addEventListener('emptied', console.log)
-  //   // a?.addEventListener('ended', console.log)
+    // a?.addEventListener('emptied', console.log)
+    a?.addEventListener('ended', updateMetadata)
   //   // a?.addEventListener('loadeddata', console.log)
   //   // a?.addEventListener('loadedmetadata', console.log)
   //   // a?.addEventListener('loadstart', console.log)
-  //   // a?.addEventListener('pause', console.log)
+    a?.addEventListener('pause', updateMetadata)
   //   // a?.addEventListener('play', console.log)
   //   // a?.addEventListener('playing', console.log)
   //   // a?.addEventListener('ratechange', console.log)
@@ -85,10 +109,10 @@
   //   // a?.addEventListener('seeking', console.log)
   //   // a?.addEventListener('stalled', console.log)
   //   // a?.addEventListener('suspend', console.log)
-  //   // a?.addEventListener('timeupdate', console.log)
+    a?.addEventListener('timeupdate', () => currentTime = a.currentTime)
   //   // a?.addEventListener('volumechange', console.log)
   //   // a?.addEventListener('waiting', console.log)
-  // })
+  })
 </script>
 
 {#if loading}
