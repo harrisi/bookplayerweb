@@ -116,7 +116,7 @@
 
   window.addEventListener('beforeunload', updateMetadata)
   document.addEventListener('visibilitychange',
-  () => document.visibilityState === 'hidden' ? updateMetadata : void 0)
+  () => document.visibilityState === 'hidden' ? updateMetadata() : void 0)
 </script>
 
 {#if loading}
