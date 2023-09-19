@@ -2,7 +2,6 @@
   import { onDestroy } from "svelte";
   import { page } from "$app/stores";
   const { token } = $page.data
-  // import { onMount } from "svelte";
 
   const worker = new Worker(new URL('./worker.js', import.meta.url), {type: 'module'})
 
@@ -27,6 +26,7 @@
 
   /** @param e {Event} */
   const canplay = e => {
+    // console.log('can play')
     const target = /** @type {HTMLAudioElement} */ (e.target)
     target.currentTime = currentTime
   }
@@ -45,15 +45,50 @@
     loading = false
 
     // I don't believe this will throw, so just blindly revoke whatever to save memory
-    URL.revokeObjectURL(url)
+    try {
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+    }
     url = data
-    document.querySelector('source').src = url
-    document.querySelector('audio')?.play()
+    try {
+      const a = document.querySelector('audio')
+      a.src = url
+      a.play().then(() => console.log('played')).catch(console.error)
+    } catch (err) {
+      console.error('got err in player')
+      console.error(err)
+    }
   })
 
   onDestroy(() => {
     URL.revokeObjectURL(url)
   })
+
+  // onMount(() => {
+  //   const a = document.querySelector('audio')
+  //   // a?.addEventListener('audioprocess', console.log)
+  //   // a?.addEventListener('canplay', console.log)
+  //   // a?.addEventListener('canplaythrough', console.log)
+  //   // a?.addEventListener('complete', console.log)
+  //   // a?.addEventListener('durationchange', console.log)
+  //   // a?.addEventListener('emptied', console.log)
+  //   // a?.addEventListener('ended', console.log)
+  //   // a?.addEventListener('loadeddata', console.log)
+  //   // a?.addEventListener('loadedmetadata', console.log)
+  //   // a?.addEventListener('loadstart', console.log)
+  //   // a?.addEventListener('pause', console.log)
+  //   // a?.addEventListener('play', console.log)
+  //   // a?.addEventListener('playing', console.log)
+  //   // a?.addEventListener('ratechange', console.log)
+  //   // a?.addEventListener('seeked', console.log)
+  //   // a?.addEventListener('seeking', console.log)
+  //   // a?.addEventListener('stalled', console.log)
+  //   // a?.addEventListener('suspend', console.log)
+  //   // a?.addEventListener('timeupdate', console.log)
+  //   // a?.addEventListener('volumechange', console.log)
+  //   // a?.addEventListener('waiting', console.log)
+  // })
 </script>
 
 {#if loading}
@@ -63,7 +98,7 @@
 {title}
 <div>
   <img src="{thumbnail}" alt="thumbnail for book"/>
-  <audio controls on:canplay={canplay}>
-    <source src={url} type="audio/mp3">
+  <audio controls on:play={canplay}>
+    <!-- <source src={url} type="audio/mp3"> -->
   </audio>
 </div>
