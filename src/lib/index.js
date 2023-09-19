@@ -3,14 +3,18 @@ import { dev } from '$app/environment'
 
 const root = dev ? 'http://localhost:5003/v1' : 'https://api.tortugapower.com/v1'
 
-const apiCall = async (method, path, body, token) => {
+const apiCall = async (method, path, body, token, keepalive) => {
   let headers = new Headers()
   if (token) headers.append('Authorization', `Bearer ${token}`)
   if (body) headers.append('Content-Type', 'application/json')
   headers.append('Origin', 'https://bp.fofgof.xyz')
+  /** @type {} */
   const opts = {headers, method}
   if (body) {
     opts.body = JSON.stringify(body)
+  }
+  if (keepalive) {
+    opts.keepalive = true
   }
   const f = await fetch(`${root}${path}`, opts).then(resp => resp.json())
   .catch(err => console.error(err))

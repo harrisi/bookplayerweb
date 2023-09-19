@@ -81,7 +81,7 @@
       // type,
       lastPlayDateTimestamp: Math.round(Date.now() / 1000),
       // speed,
-    }, token)
+    }, token, true)
   }
 
   onDestroy(() => {
