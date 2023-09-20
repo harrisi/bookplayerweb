@@ -1,17 +1,7 @@
-<script>
-  import { page } from '$app/stores';
-  /** @type {string} */
-  export let title
-  /** @type {string} */
-  export let details
-
-  const { token } = $page.data
-
-
+<script lang='ts'>
+  export let title: string
+  export let details: string
 </script>
 
 <div class='title'>{title}</div>
 <div class='details'>{details}</div>
-
-<style>
-</style>

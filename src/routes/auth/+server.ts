@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit'
 import { apiCall } from '$lib'
 
-/** @type {import('./$types').RequestHandler} */
 export async function POST({ cookies, request }) {
   const data = await request.formData()
   const id_token = data.get('id_token')

@@ -1,47 +1,44 @@
-<script>
+<script lang='ts'>
   import { onDestroy, onMount } from "svelte";
   import { page } from "$app/stores";
   import { apiCall } from "$lib";
   const { token } = $page.data
 
-  const worker = new Worker(new URL('./worker.js', import.meta.url), {type: 'module'})
+  const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
 
-  export let// args
-    relativePath, // "foo/bar/{originalFileName}"
-    originalFileName, // "3byjackwilliamson_01_williamson_64kb.mp3"
-    title, // "01 - The Cosmic Express",
-    details, // "Jack Williamson"
-    speed, // 1
-    currentTime, // 805.000971829
-    duration, // 1769.1689795918367
-    percentCompleted, // float
-    isFinished, // bool
-    orderRank, // 18; this is interesting. gotta think more about this.
-    lastPlayDateTimestamp, // 1694534463
-    type, // 2 == file, this should always be 2?
-          // or maybe not..
-    url, // url | null (? when would this be null? for folders? no)
-    thumbnail, // url | null
-    synced, // true,
-    expires_in // 1695267885
-  // } = args
+  export let
+    relativePath: string,
+    originalFileName: string,
+    title: string,
+    details: string,
+    speed: number,
+    currentTime: number,
+    duration: number,
+    percentCompleted: number,
+    isFinished: boolean,
+    orderRank, number,
+    lastPlayDateTimestamp: number,
+    type: 0 | 1 | 2,
+    url: string|null|undefined,
+    thumbnail: string|null|undefined,
+    synced: boolean,
+    expires_in: number
 
-  /** @param e {Event} */
-  const canplay = e => {
-    // console.log('can play')
-    const target = /** @type {HTMLAudioElement} */ (e.target)
-    target.currentTime = currentTime
+  const canplay = (e: Event) => {
+    const { target } = e
+    if (target)
+      (target as HTMLAudioElement).currentTime = currentTime
   }
 
   let loading = false
   let lastUpdate = Date.now()
 
-  worker.postMessage({ relativePath, token })
+  worker.postMessage({ relativePath })
   worker.addEventListener('message', ({ data }) => {
     if (data.length === 0) {
       loading = true
       setTimeout(() => {
-        worker.postMessage({ relativePath, token })
+        worker.postMessage({ relativePath })
       }, 500)
       return
     }
@@ -49,14 +46,16 @@
 
     // I don't believe this will throw, so just blindly revoke whatever to save memory
     try {
-      URL.revokeObjectURL(url)
+      URL.revokeObjectURL(url ?? '')
     } catch (err) {
       console.error(err)
     }
     url = data
     try {
       const a = document.querySelector('audio')
-      a.src = url
+      if (a == null)
+        throw new Error('could not find audio element')
+      a.src = url ?? ''
       a.play().then(() => console.log('played')).catch(console.error)
     } catch (err) {
       console.error('got err in player')
@@ -85,7 +84,8 @@
   }
 
   onDestroy(() => {
-    URL.revokeObjectURL(url)
+    if (url)
+      URL.revokeObjectURL(url)
     updateMetadata()
   })
 

@@ -1,6 +1,4 @@
-// import { apiCall } from '$lib'
-
-const syncObj = async e => {
+const syncObj = async (e: { data: { resp: any, token: string }}) => {
   const { data } = e
   const { resp, token } = data
   const synced = await (await navigator.storage.getDirectory()).getDirectoryHandle('synced', { create: true })
@@ -22,13 +20,13 @@ const syncObj = async e => {
       console.log(`${f.name} is not empty`)
       // for now, assume it's the same file, do nothing
     } else {
-      /** @type {FileSystemSyncAccessHandle} */
-      const ah = await fh.createSyncAccessHandle()
+      // @ts-ignore; typescript doesn't know about `FileSystemSyncAccessHandle`s
+      const ah: FileSystemSyncAccessHandle = await fh.createSyncAccessHandle()
       const { url } = await fetch(`https://api.tortugapower.com/v1/library?relativePath=${encodeURIComponent(resp.relativePath)}&sign=true`, {
         headers: { 'Authorization': `Bearer ${token}`},
         method: 'GET',
       }).then(res => res.json()).then(res => res.content[0])
-      const file = await fetch(url).then(res => res.blob()).catch(err => console.error(err))
+      const file = await fetch(url).then(res => res.blob())
       const buf = await file?.arrayBuffer()
       // this is annoying, but currently (2023-09-18) chromium-based browsers don't implement the spec correctly and don't accept ArrayBuffers.
       const dv = new DataView(buf);
@@ -40,13 +38,10 @@ const syncObj = async e => {
   }
 }
 
-/**
- * @param {number} indent 
- * @param {?FileSystemDirectoryHandle} dir
- */
-const view = async (dir = null, indent = 0) => {
-  if (dir == null) dir = await navigator.storage.getDirectory()
-  for await (/** @type {FileSystemFileHandle|FileSystemDirectoryHandle} */ const value of dir.values()) {
+const view = async (dir?: FileSystemDirectoryHandle, indent = 0) => {
+  if (dir == undefined) dir = await navigator.storage.getDirectory()
+  // @ts-ignore; typescript doesn't think I can call `values` but I can.
+  for await (const value of dir.values()) {
     switch (value.kind) {
       case 'file': {
         const f = await value.getFile()

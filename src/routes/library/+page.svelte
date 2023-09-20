@@ -1,27 +1,15 @@
-<script>
+<script lang='ts'>
   import { page } from '$app/stores'
-  import { apiCall, library } from '$lib'
+  import { apiCall } from '$lib'
   import { sync } from '$lib/sync'
   import FolderItem from './FolderItem.svelte'
   import Player from '../player/+page.svelte'
-  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { version } from '$app/environment'
   const { token } = $page.data
   if (!token) goto('/')
-  let items
-  let root
-  let player
-
-  const getSynced = async () => {
-    return;
-    /** @type {string[]} */
-    const resp = await apiCall('GET', '/library/keys', null, token)
-      .then(res => res.content)
-
-    resp.forEach(e => sync(e, token))
-    // sync(resp[0], token)
-  }
+  let items: any[]
+  let root: any[]
+  let player: any
 
   const loadRoot = async () => {
     // we don't want to set `sign` because this modifies the ETag.
@@ -30,14 +18,13 @@
     root = items = resp.content
   }
 
-  /** @param title {string} */
-  const folderClick = async title => {
+  const folderClick = async (title: string) => {
     // we don't want to set `sign` because this modifies the ETag.
     const resp = await apiCall('GET', `/library?relativePath=${encodeURIComponent(title)}/`, null, token)
     items = resp.content
   }
 
-  const setPlayer = async item => {
+  const setPlayer = async (item: {relativePath: string}) => {
     // if an update was made by the player, we need to refetch it. if not, this will just hit the cache
     // there are better ways to do this.
     const resp = await apiCall('GET', `/library?relativePath=${encodeURIComponent(item.relativePath)}`, null, token).then(res => res.content[0])
@@ -50,8 +37,6 @@
     }
     player = item
   }
-
-  // onMount(getSynced)
 </script>
 
 {#await loadRoot()}

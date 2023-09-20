@@ -1,6 +1,6 @@
 <script>
   export let data
-  const { token } = data
+  $: ({ token } = data)
 </script>
 
 <svelte:head>

@@ -1,4 +1,4 @@
-<script>
+<script lang='ts'>
   import { goto } from '$app/navigation'
   import { onMount } from 'svelte'
   export let data
@@ -15,6 +15,7 @@
     document.addEventListener('AppleIDSignInOnSuccess', async event => {
       console.dir(event)
       await fetch('/auth', {
+        // @ts-ignore
         body: `${encodeURIComponent('id_token')}=${encodeURIComponent(event.detail.authorization.id_token)}`,
         method: 'POST',
         headers: {
