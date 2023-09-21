@@ -3,6 +3,7 @@
   import { apiCall } from '$lib'
   import { sync } from '$lib/sync'
   import FolderItem from './FolderItem.svelte'
+  import FileItem from './FileItem.svelte'
   import Player from '../player/+page.svelte'
   import { goto } from '$app/navigation';
   const { token } = $page.data
@@ -30,6 +31,7 @@
     // there are better ways to do this.
     const resp = await apiCall('GET', `/library?relativePath=${encodeURIComponent(item.relativePath)}`, null, token).then(res => res.content[0])
     item = resp
+    console.log(item)
     await sync(item.relativePath, token)
     const audio = document.querySelector('audio')
     if (audio) {
@@ -50,7 +52,9 @@ loading..
         <FolderItem details={item.details} title={item.title}></FolderItem>
       </button>
     {:else if item.type == 2}
-      <button id='setPlayer' on:click={() => setPlayer(item)}>{item.title}</button>
+      <button class='fi' on:click={() => setPlayer(item)}>
+        <FileItem {...item}></FileItem>
+      </button>
     {/if}
   {/each}
 {:catch err}
@@ -64,6 +68,11 @@ loading..
 {/if}
 
 <style>
+  button {
+    background-color: inherit;
+    color: inherit;
+  }
+
   button#home {
     height: 10vh;
   }

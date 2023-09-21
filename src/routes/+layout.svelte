@@ -30,6 +30,13 @@
     align-items: center;
   }
 
+  a {
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    color: var(--primary);
+  }
+
   nav {
     display: grid;
     grid-template-columns: 3fr 1fr 1fr;
@@ -43,5 +50,37 @@
 
   :global(body) {
     margin: 0;
+    background-color: var(--systemBackground);
+    color: var(--primary);
+  }
+
+  :root {
+    --darkPrimary: #fafbfc;
+    --darkSystemBackground: #202225;
+    --darkSecondarySystemFill: #707176;
+    --darkTertiarySystemBackground: #333538;
+
+    --lightPrimary: #242320;
+    --lightSystemBackground: #FAFAFA;
+    --lightSecondarySystemFill: #87A0BA;
+    --lightTertiarySystemBackground: #e8e7e9;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --primary: var(--lightPrimary);
+      --systemBackground: var(--lightSystemBackground);
+      --secondarySystemFill: var(--lightSecondarySystemFill);
+      --tertiarySystemBackground: var(--lightTertiarySystemBackground);
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: var(--darkPrimary);
+      --systemBackground: var(--darkSystemBackground);
+      --secondarySystemFill: var(--darkSecondarySystemFill);
+      --tertiarySystemBackground: var(--darkTertiarySystemBackground);
+    }
   }
 </style>
