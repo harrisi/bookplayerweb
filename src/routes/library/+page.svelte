@@ -16,6 +16,7 @@
     const resp = await apiCall('GET', '/library', null, token)
 
     root = items = resp.content
+    setPlayer(resp.lastItemPlayed)
   }
 
   const folderClick = async (title: string) => {
