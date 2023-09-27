@@ -33,6 +33,7 @@
   img {
     height: min(5vh, 5vw);
     background: linear-gradient(#37398c, #537bc4);
+    border-radius: 5px;
     aspect-ratio: 1;
   }
 
