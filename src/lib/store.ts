@@ -1,19 +1,20 @@
-import { writable, type StartStopNotifier, type Writable, type Readable } from 'svelte/store'
+import { writable, type StartStopNotifier, type Writable } from 'svelte/store'
 
-const stores = new Map<string, Readable<any> | Writable<any>>()
+const stores = new Map<string, Writable<any>>()
 
-function createWritable<T>(key: string, init?: T, start?: StartStopNotifier<T>): Writable<T> {
+function createWritable<T>(key: string, init?: T, start?: StartStopNotifier<T>): void {
+  console.log(`creating store for ${key}, ${init}`)
   let w = writable(init, start)
   stores.set(key, w)
-  return w
 }
 
-function getStore(key: string): Readable<any> | Writable<any> {
-  let store = stores.get(key)
-  if (store == undefined) {
-    store = createWritable(key)
+function getStore<T>(key: string, init?: T): Writable<any> {
+  console.log(`getStore(${key})`)
+  if (!stores.has(key)) {
+    console.log(`didn't have ${key}, creating with ${init}`)
+    createWritable(key, init)
   }
-  return store
+  return stores.get(key)!
 }
 
 export { createWritable, getStore }

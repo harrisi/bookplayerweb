@@ -4,8 +4,8 @@
   export let details: string
   export let percentCompleted: number
   import Percent from "./Percent.svelte";
-  import { createWritable } from '$lib/store'
-  createWritable(relativePath, percentCompleted)
+  import { getStore } from '$lib/store'
+  getStore(relativePath, percentCompleted)
 </script>
 
 <div class='title'>{title}</div>
