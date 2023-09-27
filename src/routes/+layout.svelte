@@ -55,32 +55,64 @@
   }
 
   :root {
-    --darkPrimary: #fafbfc;
-    --darkSystemBackground: #202225;
-    --darkSecondarySystemFill: #707176;
-    --darkTertiarySystemBackground: #333538;
-
     --lightPrimary: #242320;
+    --lightSecondary: #8F8E95;
+    --lightAccent: #3488D1;
+    --lightSeparator: #DCDCDC;
     --lightSystemBackground: #FAFAFA;
+    --lightSecondarySystemBackground: #FCFBFC;
+    --lightTertiarySystemBackground: #E8E7E9;
+    --lightSystemGroupedBackground: #EFEEF0;
+    --lightSystemFill: #87A0BA;
     --lightSecondarySystemFill: #87A0BA;
-    --lightTertiarySystemBackground: #e8e7e9;
+    --lightTertiarySystemFill: #3488D1;
+    --lightQuaternarySystemFill: #3488D1;
+
+    --darkPrimary: #fafbfc;
+    --darkSecondary: #8F8E94;
+    --darkAccent: #459EEC;
+    --darkSeparator: #434448;
+    --darkSystemBackground: #202225;
+    --darkSecondarySystemBackground: #111113;
+    --darkTertiarySystemBackground: #333538;
+    --darkSystemGroupedBackground: #2C2D30;
+    --darkSystemFill: #647E98;
+    --darkSecondarySystemFill: #707176;
+    --darkTertiarySystemFill: #459EEC;
+    --darkQuaternarySystemFill: #459EEC;
   }
 
   @media (prefers-color-scheme: light) {
     :root {
       --primary: var(--lightPrimary);
+      --secondary: var(--lightSecondary);
+      --accent: var(--lightAccent);
+      --separator: var(--lightSeparator);
       --systemBackground: var(--lightSystemBackground);
-      --secondarySystemFill: var(--lightSecondarySystemFill);
+      --secondarySystemBackground: var(--lightSecondarySystemBackground);
       --tertiarySystemBackground: var(--lightTertiarySystemBackground);
+      --systemGroupedBackground: var(--lightSystemGroupedBackground);
+      --systemFill: var(--lightSystemFill);
+      --secondarySystemFill: var(--lightSecondarySystemFill);
+      --tertiarySystemFill: var(--lightTertiarySystemFill);
+      --quaternarySystemFill: var(--lightQuaternarySystemFill);
     }
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
       --primary: var(--darkPrimary);
+      --secondary: var(--darkSecondary);
+      --accent: var(--darkAccent);
+      --separator: var(--darkSeparator);
       --systemBackground: var(--darkSystemBackground);
-      --secondarySystemFill: var(--darkSecondarySystemFill);
+      --secondarySystemBackground: var(--darkSecondarySystemBackground);
       --tertiarySystemBackground: var(--darkTertiarySystemBackground);
+      --systemGroupedBackground: var(--darkSystemGroupedBackground);
+      --systemFill: var(--darkSystemFill);
+      --secondarySystemFill: var(--darkSecondarySystemFill);
+      --tertiarySystemFill: var(--darkTertiarySystemFill);
+      --quaternarySystemFill: var(--darkQuaternarySystemFill);
     }
   }
 </style>
