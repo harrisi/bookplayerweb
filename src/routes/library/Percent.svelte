@@ -11,10 +11,6 @@
 
 <style>
   .percent {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    float: right;
 
     width:  15px;
     height: 15px;
