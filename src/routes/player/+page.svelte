@@ -2,6 +2,7 @@
   import { onDestroy, onMount } from "svelte";
   import { page } from "$app/stores";
   import { apiCall } from "$lib";
+  import { getStore } from '$lib/store'
   const { token } = $page.data
 
   // const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
@@ -67,6 +68,7 @@
     // don't update more than once every 10s
     if (lastUpdate && Date.now() - lastUpdate < 10000) return
     lastUpdate = Date.now()
+    console.log(relativePath)
     apiCall('POST', '/library', {
       relativePath,
       // originalFileName,
@@ -88,6 +90,14 @@
       URL.revokeObjectURL(url)
     updateMetadata()
   })
+
+  const saveNode = () => {
+    const ac = new AudioContext()
+    const mediaElement = document.querySelector('audio')
+    if (mediaElement == null) throw new Error('Could not find audio element')
+    const sourceNode = ac.createMediaElementSource(mediaElement)
+
+  }
 
   onMount(() => {
     const a = document.querySelector('audio')

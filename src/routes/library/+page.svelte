@@ -49,7 +49,7 @@ loading..
   {#each items as item}
     {#if item.type == 0}
       <button on:click={() => folderClick(item.title)}>
-        <FolderItem details={item.details} title={item.title}></FolderItem>
+        <FolderItem {...item}></FolderItem>
       </button>
     {:else if item.type == 2}
       <button class='fi' on:click={() => setPlayer(item)}>
