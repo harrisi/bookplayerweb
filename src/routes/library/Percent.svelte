@@ -1,8 +1,9 @@
 <script lang='ts'>
   export let relativePath: string
-  import { getStore } from "$lib/store";
+  export let percentCompleted: number
+  import { getStore, createWritable } from "$lib/store";
 
-  let store = getStore(relativePath)
+  let store = getStore(relativePath, percentCompleted)
   $: percentCSS = `--percentCompleted: ${$store}%`
 </script>
 

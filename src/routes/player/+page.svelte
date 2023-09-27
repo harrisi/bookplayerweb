@@ -33,7 +33,7 @@
 
   let loading = false
   let lastUpdate: number | undefined
-  let store = getStore(relativePath, percentCompleted * 100)
+  let store = getStore(relativePath, percentCompleted)
 
   // worker.postMessage({ relativePath })
   // worker.addEventListener('message', ({ data }) => {
