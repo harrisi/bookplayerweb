@@ -29,10 +29,10 @@
   const setPlayer = async (item: {relativePath: string}) => {
     // if an update was made by the player, we need to refetch it. if not, this will just hit the cache
     // there are better ways to do this.
-    const resp = await apiCall('GET', `/library?relativePath=${encodeURIComponent(item.relativePath)}`, null, token).then(res => res.content[0])
+    const resp = await apiCall('GET', `/library?relativePath=${encodeURIComponent(item.relativePath)}&sign=true`, null, token).then(res => res.content[0])
     item = resp
     console.log(item)
-    await sync(item.relativePath, token)
+    // await sync(item.relativePath, token)
     const audio = document.querySelector('audio')
     if (audio) {
       audio.src = ''

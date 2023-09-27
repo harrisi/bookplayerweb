@@ -4,7 +4,7 @@
   import { apiCall } from "$lib";
   const { token } = $page.data
 
-  const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
+  // const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
 
   export let
     relativePath: string,
@@ -31,41 +31,41 @@
   }
 
   let loading = false
-  let lastUpdate = Date.now()
+  let lastUpdate: number | undefined
+  let store = getStore(relativePath)
 
-  worker.postMessage({ relativePath })
-  worker.addEventListener('message', ({ data }) => {
-    if (data.length === 0) {
-      loading = true
-      setTimeout(() => {
-        worker.postMessage({ relativePath })
-      }, 500)
-      return
-    }
-    loading = false
-
-    // I don't believe this will throw, so just blindly revoke whatever to save memory
-    try {
-      URL.revokeObjectURL(url ?? '')
-    } catch (err) {
-      console.error(err)
-    }
-    url = data
-    try {
-      const a = document.querySelector('audio')
-      if (a == null)
-        throw new Error('could not find audio element')
-      a.src = url ?? ''
-      a.play().then(() => console.log('played')).catch(console.error)
-    } catch (err) {
-      console.error('got err in player')
-      console.error(err)
-    }
-  })
+  // worker.postMessage({ relativePath })
+  // worker.addEventListener('message', ({ data }) => {
+  //   if (data.length === 0) {
+  //     loading = true
+  //     setTimeout(() => {
+  //       worker.postMessage({ relativePath })
+  //     }, 500)
+  //     return
+  //   }
+  //   loading = false
+  //   // I don't believe this will throw, so just blindly revoke whatever to save memory
+  //   try {
+  //     URL.revokeObjectURL(url ?? '')
+  //   } catch (err) {
+  //     console.error(err)
+  //   }
+  //   url = data
+  //   try {
+  //     const a = document.querySelector('audio')
+  //     if (a == null)
+  //       throw new Error('could not find audio element')
+  //     a.src = url ?? ''
+  //     a.play().then(() => console.log('played')).catch(console.error)
+  //   } catch (err) {
+  //     console.error('got err in player')
+  //     console.error(err)
+  //   }
+  // })
 
   const updateMetadata = () => {
     // don't update more than once every 10s
-    if (Date.now() - lastUpdate < 10000) return
+    if (lastUpdate && Date.now() - lastUpdate < 10000) return
     lastUpdate = Date.now()
     apiCall('POST', '/library', {
       relativePath,
@@ -74,7 +74,7 @@
       // details,
       currentTime,
       // duration,
-      percentCompleted: currentTime / duration,
+      percentCompleted: (currentTime / duration) * 100,
       isFinished: Math.abs(currentTime - duration) < 1,
       // orderRank,
       // type,
@@ -109,13 +109,13 @@
   //   // a?.addEventListener('seeking', console.log)
   //   // a?.addEventListener('stalled', console.log)
   //   // a?.addEventListener('suspend', console.log)
-    a?.addEventListener('timeupdate', () => currentTime = a.currentTime)
+    a?.addEventListener('timeupdate', () => $store = (a.currentTime / a.duration) * 100)
   //   // a?.addEventListener('volumechange', console.log)
   //   // a?.addEventListener('waiting', console.log)
+    // document.visibilityState === 'hidden' ? updateMetadata : () => {})
+  a?.play().catch()
   })
 
-  document.addEventListener('visibilitychange',
-  () => document.visibilityState === 'hidden' ? updateMetadata() : void 0)
 </script>
 
 {#if loading}
@@ -125,7 +125,7 @@
 {title}
 <div>
   <img src="{thumbnail}" alt="thumbnail for book"/>
-  <audio controls on:play={canplay}>
+  <audio controls on:canplay={canplay} on:play={canplay} src={url} bind:currentTime>
     <!-- <source src={url} type="audio/mp3"> -->
   </audio>
 </div>

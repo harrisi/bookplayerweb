@@ -62,4 +62,4 @@ const viewX = async () => {
   view()
 }
 
-self.addEventListener('message', syncObj)
+self.addEventListener('message', console.log)
