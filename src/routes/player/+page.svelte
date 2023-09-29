@@ -28,6 +28,7 @@
   let loading = false
   let lastUpdate: number | undefined
   let store = getStore(relativePath, percentCompleted)
+  let playable = false
 
   // worker.postMessage({ relativePath })
   // worker.addEventListener('message', ({ data }) => {
@@ -93,6 +94,19 @@
 
   }
 
+  const canplay = (e: Event) => {
+    let { target } = e
+    const a = target as HTMLAudioElement
+    if ((Math.abs(a.currentTime - currentTime) > 1)) {
+      a.currentTime = currentTime
+    }
+    if (playable) {
+      a.play()
+      a.removeEventListener('canplay', canplay)
+      a.addEventListener('play', canplay)
+    }
+  }
+
   onMount(() => {
     const a = document.querySelector('audio')
   //   // a?.addEventListener('audioprocess', console.log)
@@ -114,16 +128,12 @@
   //   // a?.addEventListener('stalled', console.log)
   //   // a?.addEventListener('suspend', console.log)
     a?.addEventListener('timeupdate', () => $store = (a.currentTime / a.duration) * 100)
-  //   // a?.addEventListener('volumechange', console.log)
-  //   // a?.addEventListener('waiting', console.log)
-    // document.visibilityState === 'hidden' ? updateMetadata : () => {})
-  a?.play().catch()
-  })
 
-  const canplay = e => {
-    e.target.currentTime = currentTime
-    e.target.play()
-  }
+    a?.addEventListener('volumechange', () => console.log(`volumechange; ${currentTime}, ${a.currentTime}`))
+    a?.addEventListener('waiting', () => console.log(`waiting; ${currentTime}, ${a.currentTime}`))
+
+    a?.play().then(() => playable = true).catch(() => playable = false)
+  })
 
 </script>
 
@@ -134,7 +144,7 @@
 {title}
 <div>
   <img src="{thumbnail}" alt="thumbnail for book"/>
-  <audio controls src={url} on:canplay={canplay}>
+  <audio controls src={url} bind:currentTime on:canplay={canplay} >
     <!-- <source src={url} type="audio/mp3"> -->
   </audio>
 </div>
