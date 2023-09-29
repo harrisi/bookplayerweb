@@ -25,12 +25,6 @@
     synced: boolean,
     expires_in: number
 
-  const canplay = (e: Event) => {
-    const { target } = e
-    if (target)
-      (target as HTMLAudioElement).currentTime = currentTime
-  }
-
   let loading = false
   let lastUpdate: number | undefined
   let store = getStore(relativePath, percentCompleted)
@@ -135,7 +129,7 @@
 {title}
 <div>
   <img src="{thumbnail}" alt="thumbnail for book"/>
-  <audio controls on:canplay={canplay} on:play={canplay} src={url} bind:currentTime>
+  <audio controls src={url} bind:currentTime>
     <!-- <source src={url} type="audio/mp3"> -->
   </audio>
 </div>
