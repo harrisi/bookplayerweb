@@ -120,6 +120,11 @@
   a?.play().catch()
   })
 
+  const canplay = e => {
+    e.target.currentTime = currentTime
+    e.target.play()
+  }
+
 </script>
 
 {#if loading}
@@ -129,7 +134,7 @@
 {title}
 <div>
   <img src="{thumbnail}" alt="thumbnail for book"/>
-  <audio controls src={url} bind:currentTime>
+  <audio controls src={url} on:canplay={canplay}>
     <!-- <source src={url} type="audio/mp3"> -->
   </audio>
 </div>
