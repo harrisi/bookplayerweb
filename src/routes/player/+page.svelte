@@ -30,6 +30,7 @@
   let store = getStore(relativePath, percentCompleted)
   let playable = false
   let skipTime = 30
+  let audioEl: HTMLAudioElement
 
   // worker.postMessage({ relativePath })
   // worker.addEventListener('message', ({ data }) => {
@@ -49,11 +50,10 @@
   //   }
   //   url = data
   //   try {
-  //     const a = document.querySelector('audio')
-  //     if (a == null)
+  //     if (audioEl == null)
   //       throw new Error('could not find audio element')
-  //     a.src = url ?? ''
-  //     a.play().then(() => console.log('played')).catch(console.error)
+  //     audioEl.src = url ?? ''
+  //     aduioEl.play().then(() => console.log('played')).catch(console.error)
   //   } catch (err) {
   //     console.error('got err in player')
   //     console.error(err)
@@ -89,9 +89,8 @@
 
   const saveNode = () => {
     const ac = new AudioContext()
-    const mediaElement = document.querySelector('audio')
-    if (mediaElement == null) throw new Error('Could not find audio element')
-    const sourceNode = ac.createMediaElementSource(mediaElement)
+    if (audioEl == null) throw new Error('Could not find audio element')
+    const sourceNode = ac.createMediaElementSource(audioEl)
 
   }
 
@@ -109,50 +108,47 @@
   }
 
   onMount(() => {
-    const a = document.querySelector('audio')
-    a?.addEventListener('audioprocess', () => console.log(`audioprocess; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('canplay', e => console.log(`canplay; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('canplaythrough', () => console.log(`canplaythrough; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('complete', () => console.log(`complete; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('durationchange', () => console.log(`durationchange; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('emptied', () => console.log(`emptied; ${currentTime}, ${a.currentTime}`))
+    audioEl.addEventListener('audioprocess', () => console.log(`audioprocess; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('canplay', e => console.log(`canplay; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('canplaythrough', () => console.log(`canplaythrough; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('complete', () => console.log(`complete; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('durationchange', () => console.log(`durationchange; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('emptied', () => console.log(`emptied; ${currentTime}, ${audioEl.currentTime}`))
 
-    a?.addEventListener('ended', updateMetadata)
+    audioEl.addEventListener('ended', updateMetadata)
 
-    a?.addEventListener('loadeddata', () => console.log(`loadeddata; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('loadedmetadata', () => console.log(`loadedmetadata; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('loadstart', () => console.log(`loadstart; ${currentTime}, ${a.currentTime}`))
+    audioEl.addEventListener('loadeddata', () => console.log(`loadeddata; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('loadedmetadata', () => console.log(`loadedmetadata; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('loadstart', () => console.log(`loadstart; ${currentTime}, ${audioEl.currentTime}`))
 
-    a?.addEventListener('pause', updateMetadata)
+    audioEl.addEventListener('pause', updateMetadata)
 
-    a?.addEventListener('play', () => console.log(`play; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('playing', () => console.log(`playing; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('ratechange', () => console.log(`ratechange; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('seeked', () => console.log(`seeked; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('seeking', () => console.log(`seeking; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('stalled', () => console.log(`stalled; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('suspend', () => console.log(`suspend; ${currentTime}, ${a.currentTime}`))
+    audioEl.addEventListener('play', () => console.log(`play; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('playing', () => console.log(`playing; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('ratechange', () => console.log(`ratechange; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('seeked', () => console.log(`seeked; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('seeking', () => console.log(`seeking; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('stalled', () => console.log(`stalled; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('suspend', () => console.log(`suspend; ${currentTime}, ${audioEl.currentTime}`))
 
-    a?.addEventListener('timeupdate', () => { console.log(`timeupdate; ${currentTime}, ${a.currentTime}`); $store = (a.currentTime / a.duration) * 100 })
+    audioEl.addEventListener('timeupdate', () => { console.log(`timeupdate; ${currentTime}, ${audioEl.currentTime}`); $store = (audioEl.currentTime / audioEl.duration) * 100 })
 
-    a?.addEventListener('volumechange', () => console.log(`volumechange; ${currentTime}, ${a.currentTime}`))
-    a?.addEventListener('waiting', () => console.log(`waiting; ${currentTime}, ${a.currentTime}`))
+    audioEl.addEventListener('volumechange', () => console.log(`volumechange; ${currentTime}, ${audioEl.currentTime}`))
+    audioEl.addEventListener('waiting', () => console.log(`waiting; ${currentTime}, ${audioEl.currentTime}`))
 
-    a?.play().then(() => playable = true).catch(() => playable = false)
+    audioEl.play().then(() => playable = true).catch(() => playable = false)
   })
 
   const playPause = () => {
-    const a = document.querySelector('audio')
-    if (a?.paused) {
-      a.play()
+    if (audioEl.paused) {
+      audioEl.play()
     } else {
-      a?.pause()
+      audioEl.pause()
     }
   }
 
   const skip = () => {
-    const a = document.querySelector('audio')
-    a.currentTime += skipTime
+    audioEl.currentTime += skipTime
   }
 
 </script>
@@ -188,7 +184,7 @@
   </button>
 
 </div>
-<audio src={url} bind:currentTime on:canplay={canplay} >
+<audio bind:this={audioEl} src={url} bind:currentTime on:canplay={canplay} >
   <!-- <source src={url} type="audio/mp3"> -->
 </audio>
 
