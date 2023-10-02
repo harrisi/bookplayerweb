@@ -39,7 +39,7 @@ self.addEventListener('fetch', (event) => {
 	// @ts-ignore
   const url = new URL(event.request.url)
   // don't cache S3 fetches here because we're using OPFS for this
-  if (url.hostname.includes('amazonaws.com')) return
+  // if (url.hostname.includes('amazonaws.com')) return
 
   async function respond() {
     const cache = await caches.open(CACHE)
