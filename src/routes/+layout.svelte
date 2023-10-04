@@ -1,6 +1,7 @@
-<script>
+<script lang='ts'>
   export let data
   $: ({ token } = data)
+  import Upload from './upload/+page.svelte'
 </script>
 
 <svelte:head>
@@ -18,6 +19,8 @@
     {/if}
   </nav>
 </header>
+
+<Upload />
 
 <div>
   <slot />
