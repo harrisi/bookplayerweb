@@ -2,8 +2,6 @@
   import { onDestroy, onMount } from "svelte";
   import { library } from "$lib/api";
   import { getStore } from '$lib/store'
-  import { browser } from "$app/environment";
-  let token = browser && localStorage.getItem('token')
 
   // const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
 
@@ -31,6 +29,8 @@
   let playable = false
   let skipTime = 30
   let audioEl: HTMLAudioElement
+  let sleepTimer: string
+  let sleepTimerEl: HTMLSelectElement
 
   // worker.postMessage({ relativePath })
   // worker.addEventListener('message', ({ data }) => {
@@ -71,6 +71,7 @@
       percentCompleted: (currentTime / duration) * 100,
       isFinished: Math.abs(currentTime - duration) < 1,
       lastPlayDateTimestamp: Math.round(Date.now() / 1000),
+      speed,
     }, true)
   }
 
@@ -101,6 +102,8 @@
   }
 
   onMount(() => {
+    audioEl.preservesPitch = true
+    audioEl.webkitPreservesPitch = true
     audioEl.addEventListener('audioprocess', () => console.log(`audioprocess; ${currentTime}, ${audioEl.currentTime}`))
     audioEl.addEventListener('canplay', e => console.log(`canplay; ${currentTime}, ${audioEl.currentTime}`))
     audioEl.addEventListener('canplaythrough', () => console.log(`canplaythrough; ${currentTime}, ${audioEl.currentTime}`))
@@ -144,6 +147,23 @@
     audioEl.currentTime += time
   }
 
+  const sleep = () => {
+    if (sleepTimer === 'Sleep timer') return
+    if (sleepTimer === 'current chapter') return
+    if (sleepTimer === 'custom') return
+    if (sleepTimer.includes('h')) {
+      setTimeout(() => {
+        audioEl.pause()
+        sleepTimerEl.value = 'Sleep timer'
+      }, 1 * 60 * 60 * 1000)
+    }
+    let minutes = sleepTimer.match(/\d+/)?.at(0)!
+    setTimeout(() => {
+      audioEl.pause()
+      sleepTimerEl.value = 'Sleep timer'
+    }, parseInt(minutes) * 1000)
+  }
+
 </script>
 
 {#if loading}
@@ -155,6 +175,11 @@
   <img id='artwork' src="{thumbnail}" alt="thumbnail for book"/>
 
   <input id='progress' type='range' min=0 max={Math.ceil(duration)} bind:value={currentTime} />
+
+  <label id='speed'>
+    {speed}
+    <input type='range' min='0.5' max=4 step='0.1' bind:value={speed} on:change={() => audioEl.playbackRate = speed}/>
+  </label>
 
   <button on:click={() => skip(-skipTime)}>
     <svg id='skipReverse' viewBox='0 0 144 156'>
@@ -176,8 +201,14 @@
     </svg>
   </button>
 
+  <select name='sleep' id='sleep' bind:this={sleepTimerEl} bind:value={sleepTimer} on:change={sleep}>
+    {#each ['Sleep timer', '5m', '10m', '15m', '30m', '1h', 'current chapter', 'custom'] as val}
+      <option value={val}>{val}</option>
+    {/each}
+  </select>
+
 </div>
-<audio bind:this={audioEl} src={url} bind:currentTime on:canplay={canplay} >
+<audio bind:this={audioEl} bind:playbackRate={speed} src={url} bind:currentTime on:canplay={canplay}>
   <!-- <source src={url} type="audio/mp3"> -->
 </audio>
 
@@ -193,12 +224,20 @@
     align-items: center;
     /* this can definitely be improved, but I don't want to spend too much time on it. */
     grid-template:
-      't t t'
-      'a a a'
-      'a a a'
-      'a a a'
-      'g g g'
-      'r p s';
+      't t t t t'
+      '. a a a .'
+      '. a a a .'
+      '. a a a .'
+      'g g g g g'
+      'e r p s l';
+  }
+
+  #sleep {
+    grid-area: l;
+  }
+
+  #speed {
+    grid-area: e;
   }
 
   #title {
@@ -211,7 +250,6 @@
 
   #progress {
     grid-area: g;
-    width: 100%;
   }
 
   #skipReverse {
