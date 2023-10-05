@@ -1,9 +1,10 @@
 // place files you want to import through the `$lib` alias in this folder.
-import { dev } from '$app/environment'
+import { browser, dev } from '$app/environment'
 
 const root = dev ? 'http://localhost:5003/v1' : 'https://api.tortugapower.com/v1'
 
-const apiCall = async (method: string, path: string, body?: BodyInit | object | null, token?: string, keepalive?: boolean) => {
+const apiCall = async (method: string, path: string, body?: BodyInit | object | null, keepalive?: boolean) => {
+  const token = browser && localStorage.getItem('token')
   let headers = new Headers()
   if (token) headers.append('Authorization', `Bearer ${token}`)
   if (body) headers.append('Content-Type', 'application/json')
@@ -21,14 +22,6 @@ const apiCall = async (method: string, path: string, body?: BodyInit | object | 
   return f
 }
 
-const apiCallF = (token?: string) => {
-  return (method: 'GET' | 'PUT' | 'POST' | 'DELETE',
-    path: string,
-    body?: BodyInit | object | null,
-    keepalive?: boolean
-  ) => apiCall(method, path, body, token, keepalive)
-}
-
 const library = Object.create(null)
 
 library.getContent = async ({relativePath = '', sign}: {relativePath: string, sign?: boolean}) => {
@@ -44,6 +37,5 @@ const user = Object.create(null)
 user.login = async ({id_token}: {id_token: string}) => {
   return await apiCall('POST', `/user/login`, {token_id: id_token})
 }
-
 
 export { apiCall, user, library }
