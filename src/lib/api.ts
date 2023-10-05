@@ -8,7 +8,8 @@ const apiCall = async (method: string, path: string, body?: BodyInit | object | 
   let headers = new Headers()
   if (token) headers.append('Authorization', `Bearer ${token}`)
   if (body) headers.append('Content-Type', 'application/json')
-  headers.append('Origin', 'https://bp.fofgof.xyz')
+  if (browser)
+    headers.append('Origin', dev ? 'https://bp.fofgof.xyz' : window.location.origin)
   const opts: RequestInit = {headers, method}
   if (body) {
     opts.body = JSON.stringify(body)

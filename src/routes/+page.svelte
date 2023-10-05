@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation'
   import { onMount } from 'svelte'
   import { apiCall } from '$lib/api.js';
+  import { browser, dev } from '$app/environment'
 
   onMount(() => {
     const token = localStorage.getItem('token')
@@ -42,7 +43,7 @@
 <svelte:head>
   <meta name="appleid-signin-client-id" content="com.tortugapower.audiobookplayer.loginservice">
   <meta name="appleid-signin-scope" content="email">
-  <meta name="appleid-signin-redirect-uri" content="https://bp.fofgof.xyz">
+  <meta name="appleid-signin-redirect-uri" content={dev ? 'https://bp.fofgof.xyz' : (browser && window.location.origin)}>
   <meta name="appleid-signin-state" content="BookPlayerWeb login">
   <meta name="appleid-signin-use-popup" content="true">
 </svelte:head>
