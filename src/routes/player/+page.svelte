@@ -85,7 +85,6 @@
     const ac = new AudioContext()
     if (audioEl == null) throw new Error('Could not find audio element')
     const sourceNode = ac.createMediaElementSource(audioEl)
-
   }
 
   const canplay = (e: Event) => {
@@ -133,6 +132,14 @@
     audioEl.addEventListener('waiting', () => console.log(`waiting; ${currentTime}, ${audioEl.currentTime}`))
 
     audioEl.play().then(() => playable = true).catch(() => playable = false)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title,
+        artist: details,
+        album: title,
+        artwork: [{ src: thumbnail ?? '' }],
+      })
+    }
   })
 
   const playPause = () => {
