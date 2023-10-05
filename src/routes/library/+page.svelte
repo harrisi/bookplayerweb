@@ -1,5 +1,5 @@
 <script lang='ts'>
-  import { apiCall } from '$lib/api'
+  import { library } from '$lib/api'
   import { sync } from '$lib/sync'
   import FolderItem from './FolderItem.svelte'
   import FileItem from './FileItem.svelte'
@@ -14,7 +14,7 @@
 
   const loadRoot = async () => {
     // we don't want to set `sign` because this modifies the ETag.
-    const resp = await apiCall('GET', '/library')
+    const resp = await library.getContent({})
 
     root = items = resp.content
     setPlayer(resp.lastItemPlayed)
@@ -22,17 +22,18 @@
 
   const folderClick = async (title: string) => {
     // we don't want to set `sign` because this modifies the ETag.
-    const resp = await apiCall('GET', `/library?relativePath=${encodeURIComponent(title)}/`)
+    const resp = await library.getContent({relativePath: `${title}/`})
     items = resp.content
   }
 
   const setPlayer = async (item: {relativePath: string}) => {
     // if an update was made by the player, we need to refetch it. if not, this will just hit the cache
     // there are better ways to do this.
-    const resp = await apiCall('GET', `/library?relativePath=${encodeURIComponent(item.relativePath)}&sign=true`).then(res => res.content[0])
+    const resp = await library.getContent({relativePath: item.relativePath, sign: true})
+    .then(res => res.content[0])
     item = resp
     console.log(item)
-    await sync(item.relativePath)
+    // await sync(item.relativePath)
     const audio = document.querySelector('audio')
     if (audio) {
       audio.src = ''

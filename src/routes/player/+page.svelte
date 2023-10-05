@@ -1,6 +1,6 @@
 <script lang='ts'>
   import { onDestroy, onMount } from "svelte";
-  import { apiCall } from "$lib/api";
+  import { library } from "$lib/api";
   import { getStore } from '$lib/store'
   import { browser } from "$app/environment";
   let token = browser && localStorage.getItem('token')
@@ -65,19 +65,12 @@
     if (lastUpdate && Date.now() - lastUpdate < 10000) return
     lastUpdate = Date.now()
     console.log(relativePath)
-    apiCall('POST', '/library', {
+    library.updateMetadata({
       relativePath,
-      // originalFileName,
-      // title,
-      // details,
       currentTime,
-      // duration,
       percentCompleted: (currentTime / duration) * 100,
       isFinished: Math.abs(currentTime - duration) < 1,
-      // orderRank,
-      // type,
       lastPlayDateTimestamp: Math.round(Date.now() / 1000),
-      // speed,
     }, true)
   }
 

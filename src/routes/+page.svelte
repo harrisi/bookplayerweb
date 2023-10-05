@@ -1,7 +1,7 @@
 <script lang='ts'>
   import { goto } from '$app/navigation'
   import { onMount } from 'svelte'
-  import { apiCall } from '$lib/api.js';
+  import { user } from '$lib/api.js';
   import { browser, dev } from '$app/environment'
 
   onMount(() => {
@@ -15,7 +15,9 @@
 
     document.addEventListener('AppleIDSignInOnSuccess', async event => {
       console.dir(event)
-      await apiCall('POST', '/user/login', {token_id: event.detail.authorization.id_token})
+      const { id_token } = event.detail.authorization
+
+      await user.login({id_token})
         .then(resp => {
           console.log(resp)
           // don't really need this, I don't think, but doesn't hurt.
