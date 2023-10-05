@@ -1,4 +1,5 @@
 <script lang='ts'>
+  import '../app.css'
   // import Upload from './upload/+page.svelte'
   import { browser } from "$app/environment";
   import { afterNavigate } from "$app/navigation";
