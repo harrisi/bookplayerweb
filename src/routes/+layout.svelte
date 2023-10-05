@@ -1,7 +1,12 @@
 <script lang='ts'>
   // import Upload from './upload/+page.svelte'
   import { browser } from "$app/environment";
+  import { afterNavigate } from "$app/navigation";
+
   let token = browser && localStorage.getItem('token')
+  afterNavigate(() => {
+    token = localStorage.getItem('token')
+  })
 </script>
 
 <svelte:head>
