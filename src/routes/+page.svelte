@@ -1,12 +1,12 @@
 <script lang='ts'>
   import { goto } from '$app/navigation'
   import { onMount } from 'svelte'
-  export let data
-
-  const { nonce, token } = data
+  import { apiCall } from '$lib/api.js';
 
   onMount(() => {
+    const token = localStorage.getItem('token')
     if (token) goto('/library')
+
     const scriptEl = document.createElement('script')
     scriptEl.type = 'text/javascript'
     scriptEl.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js'
@@ -14,20 +14,17 @@
 
     document.addEventListener('AppleIDSignInOnSuccess', async event => {
       console.dir(event)
-      await fetch('/auth', {
-        // @ts-ignore
-        body: `${encodeURIComponent('id_token')}=${encodeURIComponent(event.detail.authorization.id_token)}`,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      })
-      .then(resp => {
-        goto('/library')
-      })
-      .catch(async resp => {
-        console.log(await resp.text())
-      })
+      await apiCall('POST', '/user/login', {token_id: event.detail.authorization.id_token})
+        .then(resp => {
+          console.log(resp)
+          // don't really need this, I don't think, but doesn't hurt.
+          localStorage.setItem('email', resp.email)
+          localStorage.setItem('token', resp.token)
+          goto('/library')
+        })
+        .catch(async resp => {
+          console.log(await resp.text())
+        })
     })
 
     // Listen for authorization failures.
@@ -45,9 +42,8 @@
 <svelte:head>
   <meta name="appleid-signin-client-id" content="com.tortugapower.audiobookplayer.loginservice">
   <meta name="appleid-signin-scope" content="email">
-  <meta name="appleid-signin-redirect-uri" content="https://bp.fofgof.xyz/auth">
-  <meta name="appleid-signin-state" content="bp.fofgof.xyz login">
-  <meta name="appleid-signin-nonce" content="{nonce}">
+  <meta name="appleid-signin-redirect-uri" content="https://bp.fofgof.xyz">
+  <meta name="appleid-signin-state" content="BookPlayerWeb login">
   <meta name="appleid-signin-use-popup" content="true">
 </svelte:head>
 

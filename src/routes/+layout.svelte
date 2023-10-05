@@ -1,7 +1,7 @@
 <script lang='ts'>
-  export let data
-  $: ({ token } = data)
-  import Upload from './upload/+page.svelte'
+  // import Upload from './upload/+page.svelte'
+  import { browser } from "$app/environment";
+  let token = browser && localStorage.getItem('token')
 </script>
 
 <svelte:head>
@@ -13,14 +13,14 @@
     <div id="logo">BookPlayerWeb</div>
     <div id="about">About</div>
     {#if token}
-      <a href='/auth/logout' id="logout">Logout</a>
+      <a href='/' on:click={() => localStorage.removeItem('token')} id="logout">Logout</a>
     {:else}
       <div id="login">Login</div>
     {/if}
   </nav>
 </header>
 
-<Upload />
+<!-- <Upload /> -->
 
 <div>
   <slot />

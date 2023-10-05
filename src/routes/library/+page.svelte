@@ -1,13 +1,13 @@
 <script lang='ts'>
-  import { page } from '$app/stores'
-  import { apiCall } from '$lib'
+  import { apiCall } from '$lib/api'
   import { sync } from '$lib/sync'
   import FolderItem from './FolderItem.svelte'
   import FileItem from './FileItem.svelte'
   import Player from '../player/+page.svelte'
   import { goto } from '$app/navigation';
-  const { token } = $page.data
-  if (!token) goto('/')
+  import { browser } from '$app/environment'
+  let token = browser ? localStorage.getItem('token') : ''
+  if (!token && browser) goto('/')
   let items: any[]
   let root: any[]
   let player: any

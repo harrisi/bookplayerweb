@@ -1,9 +1,9 @@
 <script lang='ts'>
   import { onDestroy, onMount } from "svelte";
-  import { page } from "$app/stores";
-  import { apiCall } from "$lib";
+  import { apiCall } from "$lib/api";
   import { getStore } from '$lib/store'
-  const { token } = $page.data
+  import { browser } from "$app/environment";
+  let token = browser && localStorage.getItem('token')
 
   // const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
 
