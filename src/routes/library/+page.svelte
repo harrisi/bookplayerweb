@@ -48,7 +48,7 @@ loading..
 {:then _}
   <button id="home" on:click={() => items = root}>home</button>
   {#each items as item (item.relativePath)}
-    {#if item.type == 0}
+    {#if item.type < 2}
       <button on:click={() => folderClick(item.title)}>
         <FolderItem {...item}></FolderItem>
       </button>
