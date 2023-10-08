@@ -26,7 +26,7 @@
           goto('/library')
         })
         .catch(async resp => {
-          console.log(await resp.text())
+          console.dir(await resp)
         })
     })
 
