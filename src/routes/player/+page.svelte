@@ -2,26 +2,29 @@
   import { onDestroy, onMount } from "svelte";
   import { library } from "$lib/api";
   import { getStore } from '$lib/store'
+  import type { Item } from "$lib/types"
 
   // const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
 
-  export let
-    relativePath: string,
-    originalFileName: string,
-    title: string,
-    details: string,
-    speed: number,
-    currentTime: number,
-    duration: number,
-    percentCompleted: number,
-    isFinished: boolean,
-    orderRank, number,
-    lastPlayDateTimestamp: number,
-    type: 0 | 1 | 2,
-    url: string|null|undefined,
-    thumbnail: string|null|undefined,
-    synced: boolean,
-    expires_in: number
+  export let item: Item
+  let {
+    relativePath,
+    originalFileName,
+    title,
+    details,
+    speed = 1,
+    currentTime = 0,
+    duration = 1,
+    percentCompleted = 0,
+    isFinished,
+    orderRank,
+    lastPlayDateTimestamp,
+    type,
+    url,
+    thumbnail,
+    synced,
+    expires_in,
+  } = item
 
   let loading = false
   let lastUpdate: number | undefined
@@ -77,7 +80,7 @@
 
   onDestroy(() => {
     if (url)
-      URL.revokeObjectURL(url)
+      URL.revokeObjectURL(url.toString())
     updateMetadata()
   })
 
@@ -137,7 +140,7 @@
         title,
         artist: details,
         album: title,
-        artwork: [{ src: thumbnail ?? '' }],
+        artwork: [{ src: thumbnail?.toString() ?? '' }],
       })
     }
   })
@@ -179,7 +182,7 @@
 
 <div id='player'>
   <p id='title'>{title}</p>
-  <img id='artwork' src="{thumbnail}" alt="thumbnail for book"/>
+  <img id='artwork' src="{thumbnail?.toString()}" alt="thumbnail for book"/>
 
   <input id='progress' type='range' min=0 max={Math.ceil(duration)} bind:value={currentTime} />
 
@@ -215,7 +218,7 @@
   </select>
 
 </div>
-<audio bind:this={audioEl} bind:playbackRate={speed} src={url} bind:currentTime on:canplay={canplay}>
+<audio bind:this={audioEl} bind:playbackRate={speed} src={url?.toString()} bind:currentTime on:canplay={canplay}>
   <!-- <source src={url} type="audio/mp3"> -->
 </audio>
 

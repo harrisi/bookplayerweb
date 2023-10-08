@@ -1,10 +1,14 @@
 <script lang='ts'>
-  export let relativePath: string
-  export let title: string
-  export let details: string
-  export let percentCompleted: number
-  export let thumbnail: string = 'static/favicon.png'
-  export let duration: number
+  import type { Item } from '$lib/types'
+  export let item: Item
+  let {
+    relativePath,
+    title,
+    details,
+    percentCompleted = 0,
+    thumbnail,
+    duration = 1,
+  } = item
   import Percent from './Percent.svelte'
 
   const formatTime = (n: number) => {
@@ -22,7 +26,7 @@
 </script>
 
 <div>
-  <img src={thumbnail} alt={`${title} artwork thumbnail`} />
+  <img src={thumbnail?.toString()} alt={`${title} artwork thumbnail`} />
   <span class='title'>{title}</span>
   <span class='details'>{details}</span>
   <span class='duration'>{formatTime(duration)}</span>

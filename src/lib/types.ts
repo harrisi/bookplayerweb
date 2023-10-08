@@ -54,11 +54,11 @@ export type Item = {
   /**
    * URL of file
    */
-  url?: URL | null,
+  url?: URL | string | null,
   /**
    * Thumbnail URL of file
    */
-  thumbnail?: URL | null,
+  thumbnail?: URL | string | null,
   /**
    * Unix seconds timestamp of last played time.
    */
@@ -67,6 +67,14 @@ export type Item = {
    * Playback speed. Generally only 0.5x-4x.
    */
   speed?: number,
+  /**
+   * Whether item is synced or not. I'm not sure when this will be false?
+   */
+  synced?: boolean,
+  /**
+   * ???
+   */
+  expires_in?: number,
 }
 
 export type Bookmark = {

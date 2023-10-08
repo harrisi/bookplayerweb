@@ -6,11 +6,12 @@
   import Player from '../player/+page.svelte'
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment'
+  import type { Item } from '$lib/types'
   let token = browser ? localStorage.getItem('token') : ''
   if (!token && browser) goto('/')
-  let items: any[]
-  let root: any[]
-  let player: any
+  let items: Item[]
+  let root: Item[]
+  let player: Item
 
   const loadRoot = async () => {
     // we don't want to set `sign` because this modifies the ETag.
