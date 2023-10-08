@@ -68,3 +68,9 @@ export type Item = {
    */
   speed?: number,
 }
+
+export type Bookmark = {
+  note: string,
+  time: number,
+  active: boolean,
+}
