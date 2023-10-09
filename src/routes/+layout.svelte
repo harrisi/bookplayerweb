@@ -12,6 +12,8 @@
 <svelte:head>
   <link rel="manifest" href="manifest.json" />
   <meta name="apple-itunes-app" content="app-id=1138219998">
+  <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#202225" media="(prefers-color-scheme: dark)">
 </svelte:head>
 
 <header>
