@@ -10,9 +10,9 @@ jobs:
           node-version: 18
       - run: npm ci
       - run: npm run build
-      - uses: shallwefootball/s3-upload-action@master
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws_key_id: ${{ secrets.AWS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: 'build'
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - run: aws s3 sync ./build/ s3://${{ secrets.AWS_BUCKET }} --delete
