@@ -11,6 +11,7 @@
 
 <svelte:head>
   <link rel="manifest" href="manifest.json" />
+  <meta name="apple-itunes-app" content="app-id=1138219998">
 </svelte:head>
 
 <header>
