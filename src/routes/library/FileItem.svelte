@@ -1,14 +1,14 @@
 <script lang='ts'>
   import type { Item } from '$lib/types'
   export let item: Item
-  let {
-    relativePath,
-    title,
-    details,
-    percentCompleted = 0,
-    thumbnail,
-    duration = 1,
-  } = item
+  // let {
+  //   relativePath,
+  //   title,
+  //   details,
+  //   percentCompleted = 0,
+  //   thumbnail,
+  //   duration = 1,
+  // } = item
   import Percent from './Percent.svelte'
 
   const formatTime = (n: number) => {
@@ -26,11 +26,11 @@
 </script>
 
 <div>
-  <img src={thumbnail?.toString()} alt={`${title} artwork thumbnail`} />
-  <span class='title'>{title}</span>
-  <span class='details'>{details}</span>
-  <span class='duration'>{formatTime(duration)}</span>
-  <Percent {percentCompleted} {relativePath} />
+  <img src={item.thumbnail?.toString()} alt={`${item.title} artwork thumbnail`} />
+  <span class='title'>{item.title}</span>
+  <span class='details'>{item.details}</span>
+  <span class='duration'>{formatTime(item.duration ?? 0)}</span>
+  <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
 </div>
 
 <style>

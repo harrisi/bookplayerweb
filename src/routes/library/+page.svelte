@@ -6,7 +6,7 @@
   import Player from '../player/+page.svelte'
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment'
-  import type { Item } from '$lib/types'
+  import { ItemType, type Item } from '$lib/types'
   let token = browser ? localStorage.getItem('token') : ''
   if (!token && browser) goto('/')
   let items: Item[]
@@ -49,13 +49,13 @@ loading..
 {:then _}
   <button id="home" on:click={() => items = root}>home</button>
   {#each items as item (item.relativePath)}
-    {#if item.type < 2}
-      <button on:click={() => folderClick(item.title)}>
-        <FolderItem {...item}></FolderItem>
+    {#if item.type !== ItemType.File}
+      <button on:click={() => folderClick(item.title ?? '')}>
+        <FolderItem {item}></FolderItem>
       </button>
-    {:else if item.type == 2}
+    {:else if item.type === ItemType.File}
       <button class='fi' on:click={() => setPlayer(item)}>
-        <FileItem {...item}></FileItem>
+        <FileItem {item}></FileItem>
       </button>
     {/if}
   {/each}
@@ -65,7 +65,7 @@ loading..
 
 {#if player}
   {#key player.relativePath}
-    <Player {...player} />
+    <Player item={player} />
   {/key}
 {/if}
 
