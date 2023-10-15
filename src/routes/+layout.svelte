@@ -2,6 +2,7 @@
   // import Upload from './upload/+page.svelte'
   import { browser } from "$app/environment";
   import { afterNavigate } from "$app/navigation";
+  import Overlay from "$lib/components/Overlay.svelte";
 
   let token = browser && localStorage.getItem('token')
   afterNavigate(() => {
@@ -16,52 +17,63 @@
   <meta name="theme-color" content="#202225" media="(prefers-color-scheme: dark)">
 </svelte:head>
 
-<header>
-  <nav>
-    <div id="logo">BookPlayerWeb</div>
-    <div id="about">About</div>
-    {#if token}
-      <a href='/' on:click={() => localStorage.removeItem('token')} id="logout">Logout</a>
-    {:else}
-      <div id="login">Login</div>
-    {/if}
-  </nav>
-</header>
+<Overlay --top=5px>
+  <header>
+    <nav>
+      <div id='logoContainer'>
+        <img src='logo.png' alt='bookplayer logo' />
+        <span id="logo">BookPlayerWeb</span>
+      </div>
+      <div id="about">About</div>
+      {#if token}
+        <a href='/' on:click={() => localStorage.removeItem('token')} id="logout">Logout</a>
+      {:else}
+        <div id="login">Login</div>
+      {/if}
+    </nav>
+  </header>
+</Overlay>
 
 <!-- <Upload /> -->
 
-<div>
+<div id='container'>
   <slot />
 </div>
 
 <style>
-  div {
+  div#container {
     display: grid;
-    justify-content: center;
+  }
+
+  div#logoContainer {
+    height: inherit;
+    justify-self: baseline;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     align-items: center;
   }
 
-  a {
-    display: grid;
-    justify-content: center;
-    align-items: center;
-    color: var(--primary);
+  img {
+    object-fit: contain;
+    max-height: 10vh;
+  }
+
+  header {
+    width: 100%;
   }
 
   nav {
     display: grid;
     grid-template-columns: 3fr 1fr 1fr;
-    border: 1px solid black;
     height: 10vh;
-  }
-
-  nav > * {
-    border: 1px solid red;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 
   :global(body) {
     margin: 0;
-    background-color: var(--systemBackground);
+    background-color: #F4F4F5; /* var(--systemBackground); */
     color: var(--primary);
   }
 

@@ -1,14 +1,6 @@
 <script lang='ts'>
   import type { Item } from '$lib/types'
   export let item: Item
-  // let {
-  //   relativePath,
-  //   title,
-  //   details,
-  //   percentCompleted = 0,
-  //   thumbnail,
-  //   duration = 1,
-  // } = item
   import Percent from './Percent.svelte'
 
   const formatTime = (n: number) => {
@@ -23,28 +15,43 @@
 
     return parts.join(':')
   }
+
+  $: thumbnailCSS = item.thumbnail ? `--thumbnail: url(${item.thumbnail})` : void 0
 </script>
 
-<div>
-  <img src={item.thumbnail?.toString()} alt={`${item.title} artwork thumbnail`} />
-  <span class='title'>{item.title}</span>
-  <span class='details'>{item.details}</span>
-  <span class='duration'>{formatTime(item.duration ?? 0)}</span>
-  <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
+<div id='container'>
+  <div id='artwork' style={thumbnailCSS}></div>
+  <div id='info'>
+    <div class='title'>{item.title}</div>
+    <div class='details'>{item.details}</div>
+    <div class='duration'>{formatTime(item.duration ?? 0)}</div>
+    <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
+  </div>
 </div>
 
 <style>
-  img {
-    height: min(5vh, 5vw);
-    background: linear-gradient(#37398c, #537bc4);
-    border-radius: 5px;
-    aspect-ratio: 1;
+  div#container{
+    display: grid;
+    height: 100%;
+    border-radius: 8px;
+    justify-content: stretch;
+    align-items: end;
+    font-size: medium;
+    grid-template-rows: 4fr 1fr;
   }
 
-  div {
+  div#artwork {
+    background: var(--thumbnail, linear-gradient(#37398c, #537bc4)) no-repeat;
+    border-radius: 8px 8px 0px 0px;
+    background-size: cover;
+    height: 100%;
+  }
+
+  div#info {
     display: grid;
-    align-items: center;
     justify-items: center;
-    grid-template-columns: repeat(5, 1fr);
+    align-items: center;
+    height: 100%;
+    grid-template-columns: repeat(3, 1fr) auto;
   }
 </style>

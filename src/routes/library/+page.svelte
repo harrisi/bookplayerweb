@@ -1,12 +1,12 @@
 <script lang='ts'>
   import { library } from '$lib/api'
-  import { sync } from '$lib/sync'
   import FolderItem from './FolderItem.svelte'
   import FileItem from './FileItem.svelte'
   import Player from '../player/+page.svelte'
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment'
   import { ItemType, type Item } from '$lib/types'
+  import { fade } from 'svelte/transition';
   let token = browser ? localStorage.getItem('token') : ''
   if (!token && browser) goto('/')
   let items: Item[]
@@ -15,25 +15,27 @@
 
   const loadRoot = async () => {
     // we don't want to set `sign` because this modifies the ETag.
-    const resp = await library.getContent({})
+    const resp = await library.getContent({sign: true, noLastItemPlayed: true})
 
-    root = items = resp.content
-    setPlayer(resp.lastItemPlayed)
+    root = items = resp
+    if (!player) {
+      const lastItem = await library.getLastPlayed()
+      setPlayer(lastItem)
+    }
   }
 
   const folderClick = async (title: string) => {
     // we don't want to set `sign` because this modifies the ETag.
-    const resp = await library.getContent({relativePath: `${title}/`})
-    items = resp.content
+    const resp = await library.getContent({relativePath: `${title}/`, sign: true})
+    items = resp
   }
 
   const setPlayer = async (item: {relativePath: string}) => {
     // if an update was made by the player, we need to refetch it. if not, this will just hit the cache
     // there are better ways to do this.
     const resp = await library.getContent({relativePath: item.relativePath, sign: true})
-    .then(res => res.content[0])
+    .then(res => res[0])
     item = resp
-    console.log(item)
     // await sync(item.relativePath)
     const audio = document.querySelector('audio')
     if (audio) {
@@ -47,18 +49,20 @@
 {#await loadRoot()}
 loading..
 {:then _}
-  <button id="home" on:click={() => items = root}>home</button>
+  <button id='home' on:click={loadRoot}>home</button>
+  <div id='grid' transition:fade>
   {#each items as item (item.relativePath)}
     {#if item.type !== ItemType.File}
-      <button on:click={() => folderClick(item.title ?? '')}>
+      <button in:fade|global on:click={() => folderClick(item.title ?? '')}>
         <FolderItem {item}></FolderItem>
       </button>
     {:else if item.type === ItemType.File}
-      <button class='fi' on:click={() => setPlayer(item)}>
+      <button in:fade|global class='fi' on:click={() => setPlayer(item)}>
         <FileItem {item}></FileItem>
       </button>
     {/if}
   {/each}
+  </div>
 {:catch err}
   {err}
 {/await}
@@ -70,12 +74,27 @@ loading..
 {/if}
 
 <style>
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin: 8px;
+  }
+
   button {
     background-color: inherit;
     color: inherit;
+    aspect-ratio: 1;
+    background-color: var(--systemBackground);
+    border-radius: 8px;
+    box-shadow: 0px 10px 15px rgba(0,0,0, 0.1), 0px 4px 6px rgba(0,0,0, 0.05);
+    padding: 0;
+    border-width: 0;
+    cursor: pointer;
   }
 
   button#home {
     height: 10vh;
+    margin: 5px;
   }
 </style>
