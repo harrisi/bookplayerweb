@@ -49,13 +49,50 @@ const apiCall = Object.freeze({
 })
 
 const library = Object.freeze({
-  getContent: async ({relativePath, sign}: {relativePath?: string, sign?: boolean}, keepalive?: boolean) => {
+  getContent: async ({relativePath, sign, noLastItemPlayed}: {relativePath?: string, sign?: boolean, noLastItemPlayed?: boolean}, keepalive?: boolean) => {
     let path = '/library'
+    let resUrl: string | null | undefined
+    let inCache: string | null | undefined
     let params = []
     if (relativePath) params.push(`relativePath=${encodeURIComponent(relativePath)}`)
-    if (sign != undefined) params.push(`sign=${encodeURIComponent(sign)}`)
+    if (sign != undefined) {
+      inCache = localStorage.getItem(`relativePath=${relativePath ?? '/'}`)
+      if (inCache) {
+        let expiresIn = localStorage.getItem(`expiresIn=${relativePath ?? '/'}`)
+        let expired = (e: string) => {
+          const asInt = parseInt(e)
+          // set now as 30 seconds in the future. if expires_in is that close, just get a new url anyway.
+          const now = Math.round(Date.now() / 1000) + 30
+          return asInt <= now
+        }
+        if (expiresIn && !expired(expiresIn)) {
+          resUrl = inCache
+        } else {
+          params.push(`sign=${encodeURIComponent(sign)}`)
+        }
+      } else {
+        params.push(`sign=${encodeURIComponent(sign)}`)
+      }
+    }
+    if (noLastItemPlayed != undefined) params.push(`noLastItemPlayed=${encodeURIComponent(noLastItemPlayed)}`)
     if (params.length) path += '?' + params.join('&')
-    return await apiCall.get(path, keepalive).catch(console.error)
+    let res = await apiCall.get(path, keepalive).then(res => res.content).catch(console.error)
+    let i = 0
+    for (let item of res) {
+      const itemInCache = localStorage.getItem(`relativePath=${item.relativePath ?? '/'}`)
+      if (!itemInCache) {
+        if (item.url) {
+          localStorage.setItem(`relativePath=${item.relativePath ?? '/'}`, item.url)
+          localStorage.setItem(`expiresIn=${item.relativePath ?? '/'}`, item.expires_in)
+        }
+      } else {
+        if (sign) {
+          res[i].url = itemInCache
+        }
+      }
+      i++
+    }
+    return res
   },
 
   getKeys: async (keepalive?: boolean) => {
