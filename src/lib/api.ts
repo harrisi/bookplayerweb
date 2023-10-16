@@ -66,10 +66,8 @@ const library = Object.freeze({
       inCache = localStorage.getItem(`relativePath=${relativePath ?? '/'}`)
       const expiresIn = localStorage.getItem(`expiresIn=${relativePath ?? '/'}`)
       if (inCache) {
-        if (expiresIn && expired(expiresIn)) {
-          console.log(`expiresIn: ${expiresIn}`)
+        if (!expiresIn || expired(expiresIn)) {
           params.push(`sign=${encodeURIComponent(sign)}`)
-          localStorage.removeItem(`expiresIn=${relativePath ?? '/'}`)
         }
       } else {
         params.push(`sign=${encodeURIComponent(sign)}`)
