@@ -146,7 +146,7 @@ const library = Object.freeze({
 
   getBookmarks: async (item?: Item | string, keepalive?: boolean): Promise<Bookmark[]> => {
     let relativePath = (typeof item === 'string') ? item : (item?.relativePath ?? '')
-    return await apiCall.post('/library/bookmarks', { relativePath }, keepalive)
+    return await apiCall.post('/library/bookmarks', { relativePath }, keepalive).then(res => res.bookmarks)
   },
 
   updateBookmarks: async (item: Item | string, bookmark: Bookmark, keepalive?: boolean) => {
