@@ -7,6 +7,7 @@
   import { browser } from '$app/environment'
   import { ItemType, type Item } from '$lib/types'
   import { fade } from 'svelte/transition';
+  import Bookmarks from '$lib/components/Bookmarks.svelte'
   let token = browser ? localStorage.getItem('token') : ''
   if (!token && browser) goto('/')
   let items: Item[]
@@ -70,6 +71,7 @@ loading..
 {#if player}
   {#key player.relativePath}
     <Player item={player} />
+    <Bookmarks item={player} />
   {/key}
 {/if}
 
