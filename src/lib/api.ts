@@ -51,43 +51,46 @@ const apiCall = Object.freeze({
 const library = Object.freeze({
   getContent: async ({relativePath, sign, noLastItemPlayed}: {relativePath?: string, sign?: boolean, noLastItemPlayed?: boolean}, keepalive?: boolean) => {
     let path = '/library'
-    let resUrl: string | null | undefined
     let inCache: string | null | undefined
     let params = []
+    const expired = (e: string) => {
+      const asInt = parseInt(e)
+      // set now as 30 seconds in the future. if expires_in is that close, just get a new url anyway.
+      const now = Math.round(Date.now() / 1000) + 30
+      return asInt <= now
+    }
+
     if (relativePath) params.push(`relativePath=${encodeURIComponent(relativePath)}`)
+    // we want the url
     if (sign != undefined) {
       inCache = localStorage.getItem(`relativePath=${relativePath ?? '/'}`)
+      const expiresIn = localStorage.getItem(`expiresIn=${relativePath ?? '/'}`)
       if (inCache) {
-        let expiresIn = localStorage.getItem(`expiresIn=${relativePath ?? '/'}`)
-        let expired = (e: string) => {
-          const asInt = parseInt(e)
-          // set now as 30 seconds in the future. if expires_in is that close, just get a new url anyway.
-          const now = Math.round(Date.now() / 1000) + 30
-          return asInt <= now
-        }
-        if (expiresIn && !expired(expiresIn)) {
-          resUrl = inCache
-        } else {
+        if (expiresIn && expired(expiresIn)) {
+          console.log(`expiresIn: ${expiresIn}`)
           params.push(`sign=${encodeURIComponent(sign)}`)
+          localStorage.removeItem(`expiresIn=${relativePath ?? '/'}`)
         }
       } else {
         params.push(`sign=${encodeURIComponent(sign)}`)
       }
     }
     if (noLastItemPlayed != undefined) params.push(`noLastItemPlayed=${encodeURIComponent(noLastItemPlayed)}`)
+
     if (params.length) path += '?' + params.join('&')
-    let res = await apiCall.get(path, keepalive).then(res => res.content).catch(console.error)
+    let res = await apiCall.get(path, keepalive).catch(console.error)
     let i = 0
-    for (let item of res) {
-      const itemInCache = localStorage.getItem(`relativePath=${item.relativePath ?? '/'}`)
-      if (!itemInCache) {
-        if (item.url) {
-          localStorage.setItem(`relativePath=${item.relativePath ?? '/'}`, item.url)
-          localStorage.setItem(`expiresIn=${item.relativePath ?? '/'}`, item.expires_in)
-        }
+    for (let item of res.content) {
+      // this will happen if sign=true and the url isn't expired
+      if (item.url) {
+        console.log(`${item.relativePath}.url: ${item.url}`)
+        localStorage.setItem(`relativePath=${item.relativePath ?? '/'}`, item.url)
+        localStorage.setItem(`expiresIn=${item.relativePath ?? '/'}`, item.expires_in)
       } else {
+        // but if we passed sign, we still want to add the url from cache.
         if (sign) {
-          res[i].url = itemInCache
+          const itemInCache = localStorage.getItem(`relativePath=${item.relativePath ?? '/'}`)
+          res.content[i].url = itemInCache
         }
       }
       i++
@@ -143,7 +146,7 @@ const library = Object.freeze({
     return await apiCall.post('/library/thumbnail_set', { relativePath, thumbnail_name, uploaded: true }, keepalive)
   },
 
-  getBookmarks: async (item?: Item | string, keepalive?: boolean) => {
+  getBookmarks: async (item?: Item | string, keepalive?: boolean): Promise<Bookmark[]> => {
     let relativePath = (typeof item === 'string') ? item : (item?.relativePath ?? '')
     return await apiCall.post('/library/bookmarks', { relativePath }, keepalive)
   },

@@ -15,18 +15,18 @@
 
   const loadRoot = async () => {
     // we don't want to set `sign` because this modifies the ETag.
-    const resp = await library.getContent({sign: true, noLastItemPlayed: true})
+    const resp = await library.getContent({noLastItemPlayed: true})
 
-    root = items = resp
+    root = items = resp.content
     if (!player) {
-      const lastItem = await library.getLastPlayed()
-      setPlayer(lastItem)
+      const lastItemPlayed = await library.getLastPlayed()
+      setPlayer(lastItemPlayed)
     }
   }
 
   const folderClick = async (title: string) => {
     // we don't want to set `sign` because this modifies the ETag.
-    const resp = await library.getContent({relativePath: `${title}/`, sign: true})
+    const resp = await library.getContent({relativePath: `${title}/`}).then(res => res.content)
     items = resp
   }
 
@@ -34,7 +34,7 @@
     // if an update was made by the player, we need to refetch it. if not, this will just hit the cache
     // there are better ways to do this.
     const resp = await library.getContent({relativePath: item.relativePath, sign: true})
-    .then(res => res[0])
+    .then(res => res.content[0])
     item = resp
     // await sync(item.relativePath)
     const audio = document.querySelector('audio')
