@@ -20,12 +20,18 @@
 </script>
 
 <div id='container'>
-  <div id='artwork' style={thumbnailCSS}></div>
-  <div id='info'>
-    <div class='title'>{item.title}</div>
-    <div class='details'>{item.details}</div>
+  <div id='artwork' style={thumbnailCSS}>
     <div class='duration'>{formatTime(item.duration ?? 0)}</div>
+  </div>
+  <div id='info'>
+    <div id='text'>
+      <div class='title'>{item.title}</div>
+      <div class='details'>{item.details}</div>
+    </div>
     <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
+    <button on:click|preventDefault|stopPropagation={console.log}>
+      <p>...</p>
+    </button>
   </div>
 </div>
 
@@ -45,6 +51,17 @@
     border-radius: 8px 8px 0px 0px;
     background-size: cover;
     height: 100%;
+    display: flex;
+    justify-content: end;
+    align-items: end;
+  }
+
+  div#artwork .duration {
+    margin: 10px;
+    padding: 3px;
+    background-color: var(--systemBackground);
+    border-radius: 5px;
+    opacity: 75%;
   }
 
   div#info {
@@ -52,6 +69,16 @@
     justify-items: center;
     align-items: center;
     height: 100%;
-    grid-template-columns: repeat(3, 1fr) auto;
+    grid-template-columns: 3fr 1fr auto;
+  }
+
+  div#info button {
+    padding: 5px;
+    margin: 5px;
+  }
+
+  div#info #text {
+    display: grid;
+    grid-template-rows: 2fr 1fr;
   }
 </style>
