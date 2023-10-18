@@ -78,21 +78,31 @@ loading..
 <style>
   #grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 8px;
+  }
+
+  #flex {
+    display: flex;
+    flex-wrap: wrap;
+    flex: 1 1 0px;
     gap: 8px;
     margin: 8px;
   }
 
   button {
-    background-color: inherit;
     color: inherit;
-    aspect-ratio: 1;
     background-color: var(--systemBackground);
     border-radius: 8px;
     box-shadow: 0px 10px 15px rgba(0,0,0, 0.1), 0px 4px 6px rgba(0,0,0, 0.05);
     padding: 0;
     border-width: 0;
     cursor: pointer;
+  }
+
+  button#home {
+    aspect-ratio: 1;
   }
 
   button#home {

@@ -29,11 +29,14 @@
       <div class='details'>{item.details}</div>
     </div>
     <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
-    <select>
+    <button on:click|preventDefault|stopPropagation={console.log}>
+      <p>...</p>
+    </button>
+    <!-- <select>
       <option>...</option>
       <option>do A</option>
       <option>do B</option>
-    </select>
+    </select> -->
   </div>
 </div>
 
@@ -45,7 +48,7 @@
     justify-content: stretch;
     align-items: end;
     font-size: medium;
-    grid-template-rows: 4fr 1fr;
+    grid-template-rows: 3fr 1fr;
   }
 
   div#artwork {
