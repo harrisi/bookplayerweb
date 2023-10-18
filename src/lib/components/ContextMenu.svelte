@@ -43,6 +43,7 @@
 <style>
   ul {
     list-style: none;
+    margin: 0;
   }
 
   .context-menu { 
@@ -53,7 +54,7 @@
   .menu {
     display: flex;
     flex-direction: column;
-    background-color: #fff;
+    background-color: var(--systemBackground);
     border-radius: 10px;
     box-shadow: 0 10px 20px rgb(64 64 64 / 5%);
     padding: 10px 0;
