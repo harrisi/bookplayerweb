@@ -6,7 +6,12 @@
   import { library } from '$lib/api'
   import { Buffer } from 'buffer'
   import { read } from 'node-id3'
-  import { parseBuffer } from 'music-metadata'
+  import process from 'process'
+  import { Stream } from 'stream'
+  import * as mm from 'music-metadata-browser'
+
+  window.Buffer = Buffer
+  window.process = process
 
   let thumbnail: Buffer | undefined
 
@@ -27,7 +32,6 @@
 
   $: {
     let url = thumbnail && URL.createObjectURL(new Blob([thumbnail]))
-    console.log(thumbnail, url, item.thumbnail)
     thumbnailCSS = (url || item.thumbnail) ? `--thumbnail: url(${thumbnail ? url : item.thumbnail})` : undefined
   }
 
@@ -36,37 +40,45 @@
     document.addEventListener('contextmenu', rightClick)
     // if (!item.relativePath.toLowerCase().endsWith('.mp3')) return
 
-    let content = await library.getContent({
+    let content = localStorage.getItem(`relativePath=${item.relativePath}`) ?? await library.getContent({
       relativePath: item.relativePath,
       sign: true,
       noLastItemPlayed: true,
     }).then(res => res.content[0])
-    let firstFrame = await fetch(content.url, {
-      headers: {
-        Range: 'bytes=0-9',
-      },
-    }).then(res => res.blob())
 
-    console.log(item.relativePath)
-    let maybeID3 = await firstFrame.slice(0, 3).text()
-    console.log('maybeID3', maybeID3)
-    if (maybeID3 !== 'ID3') return
-    let sizeBuf = await firstFrame.slice(6, 10).arrayBuffer()
-    let sizeView = new Int8Array(sizeBuf)
-    let bin = [...sizeView].map(n => n.toString(2).padStart(8, '0').slice(1)).join('')
-    console.log('bin', bin)
-    console.log('binVal', parseInt(bin, 2))
-    let fullID3 = await fetch(content.url, {
-      headers: {
-        Range: `bytes=0-${parseInt(bin, 2)}`,
-      }
-    }).then(res => res.arrayBuffer())
+    let url = typeof content === 'string' ? content : content.url
+    let tagsMM = await mm.fetchFromUrl(url, { skipPostHeaders: true }).catch(console.error)
 
-    let tags = read(Buffer.from(fullID3))
-    console.dir(tags)
-    if (typeof tags.image === 'object') {
-      thumbnail = tags.image.imageBuffer
+    if (tagsMM && tagsMM.common && tagsMM.common.picture) {
+      thumbnail = mm.selectCover(tagsMM.common.picture)?.data
     }
+
+    // let firstFrame = await fetch(content.url, {
+    //   headers: {
+    //     Range: 'bytes=0-9',
+    //   },
+    // }).then(res => res.blob())
+
+    // console.log(item.relativePath)
+    // let maybeID3 = await firstFrame.slice(0, 3).text()
+    // console.log('maybeID3', maybeID3)
+    // if (maybeID3 !== 'ID3') return
+    // let sizeBuf = await firstFrame.slice(6, 10).arrayBuffer()
+    // let sizeView = new Int8Array(sizeBuf)
+    // let bin = [...sizeView].map(n => n.toString(2).padStart(8, '0').slice(1)).join('')
+    // console.log('bin', bin)
+    // console.log('binVal', parseInt(bin, 2))
+    // let fullID3 = await fetch(content.url, {
+    //   headers: {
+    //     Range: `bytes=0-${parseInt(bin, 2)}`,
+    //   }
+    // }).then(res => res.arrayBuffer())
+
+    // let tags = read(Buffer.from(fullID3))
+    // console.dir(tags)
+    // if (typeof tags.image === 'object') {
+    //   thumbnail = tags.image.imageBuffer
+    // }
   })
 
   function hideMenu() {
