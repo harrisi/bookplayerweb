@@ -1,4 +1,3 @@
-// place files you want to import through the `$lib` alias in this folder.
 import { browser, dev } from '$app/environment'
 import type { HttpMethod } from '@sveltejs/kit'
 import type { Bookmark, Item } from './types'
@@ -53,24 +52,25 @@ const library = Object.freeze({
     let path = '/library'
     let inCache: string | null | undefined
     let params = []
+    const getDate = (c: string) => Date.parse(`${c.substring(0, 4)}-${c.substring(4,6)}-${c.substring(6,11)}:${c.substring(11,13)}:${c.substring(13)}`) / 1000
     const expired = (e: string) => {
-      const asInt = parseInt(e)
-      // set now as 30 seconds in the future. if expires_in is that close, just get a new url anyway.
-      const now = Math.round(Date.now() / 1000) + 30
-      return asInt <= now
+      let url = new URL(e)
+      let createdAt = url.searchParams.get('X-Amz-Date')
+      let expiresIn = url.searchParams.get('X-Amz-Expires')
+      if (!createdAt || !expiresIn) return true
+      return (getDate(createdAt) + parseInt(expiresIn)) >= (Date.now() / 1000) + 30
     }
 
     if (relativePath) params.push(`relativePath=${encodeURIComponent(relativePath)}`)
     // we want the url
-    if (sign != undefined) {
+    if (sign) {
       inCache = localStorage.getItem(`relativePath=${relativePath ?? '/'}`)
-      const expiresIn = localStorage.getItem(`expiresIn=${relativePath ?? '/'}`)
-      if (inCache) {
-        if (!expiresIn || expired(expiresIn)) {
+      if (!inCache) {
+        params.push(`sign=${encodeURIComponent(sign)}`)
+      } else {
+        if (expired(inCache)) {
           params.push(`sign=${encodeURIComponent(sign)}`)
         }
-      } else {
-        params.push(`sign=${encodeURIComponent(sign)}`)
       }
     }
     if (noLastItemPlayed != undefined) params.push(`noLastItemPlayed=${encodeURIComponent(noLastItemPlayed)}`)
@@ -83,7 +83,6 @@ const library = Object.freeze({
       if (item.url) {
         console.log(`${item.relativePath}.url: ${item.url}`)
         localStorage.setItem(`relativePath=${item.relativePath ?? '/'}`, item.url)
-        localStorage.setItem(`expiresIn=${item.relativePath ?? '/'}`, item.expires_in)
       } else {
         // but if we passed sign, we still want to add the url from cache.
         if (sign) {
