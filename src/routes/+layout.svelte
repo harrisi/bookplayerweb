@@ -1,8 +1,9 @@
 <script lang='ts'>
   // import Upload from './upload/+page.svelte'
-  import { browser } from "$app/environment";
-  import { afterNavigate } from "$app/navigation";
-  import Overlay from "$lib/components/Overlay.svelte";
+  import { browser } from '$app/environment'
+  import { afterNavigate } from '$app/navigation'
+  import Overlay from '$lib/components/Overlay.svelte'
+  import ContextMenu from '$lib/components/ContextMenu.svelte'
 
   let token = browser && localStorage.getItem('token')
   afterNavigate(() => {
@@ -66,6 +67,8 @@
 <div id='container'>
   <slot />
 </div>
+
+<ContextMenu />
 
 <style>
   a {
