@@ -1,5 +1,5 @@
 {
   "vsicons.associations.folders": [
-    { "extensions": ["library"], "disabled": true }
+    { "extensions": ["library", "settings"], "disabled": true }
   ]
 }
