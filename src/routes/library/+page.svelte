@@ -79,8 +79,15 @@ loading..
   #grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
+    /* grid-template-columns: repeat(autofit, minmax(300px, 1fr)); */
     gap: 8px;
     margin: 8px;
+  }
+
+  @media screen and (max-width: 768px) {
+    #grid {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 
   #flex {
