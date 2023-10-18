@@ -58,7 +58,7 @@ loading..
         <FolderItem {item}></FolderItem>
       </button>
     {:else if item.type === ItemType.File}
-      <button in:fade|global class='fi' on:click={() => setPlayer(item)}>
+      <button in:fade|global on:click={() => setPlayer(item)}>
         <FileItem {item}></FileItem>
       </button>
     {/if}
