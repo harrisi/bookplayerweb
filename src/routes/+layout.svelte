@@ -4,11 +4,15 @@
   import { afterNavigate } from '$app/navigation'
   import Overlay from '$lib/components/Overlay.svelte'
   import ContextMenu from '$lib/components/ContextMenu.svelte'
+  import { page } from '$app/stores'
+  import Popover from '$lib/components/Popover.svelte'
 
   let token = browser && localStorage.getItem('token')
   afterNavigate(() => {
     token = localStorage.getItem('token')
   })
+
+  $: popover = $page.url.search === '?about'
 </script>
 
 <svelte:head>
@@ -20,6 +24,10 @@
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 </svelte:head>
+
+{#if popover}
+  <Popover />
+{/if}
 
 <Overlay --top=5px>
   <header>
