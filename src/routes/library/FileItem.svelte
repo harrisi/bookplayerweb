@@ -153,6 +153,12 @@
     margin: 5px;
   }
 
+  @media screen and (min-width: 1175px) {
+    div#info button {
+      display: none;
+    }
+  }
+
   div#info #text {
     display: grid;
     grid-template-rows: 2fr 1fr;
