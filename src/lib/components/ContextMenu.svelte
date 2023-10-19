@@ -13,7 +13,6 @@
   }
 
   const rightClick = (e: MouseEvent) => {
-    console.dir(e)
     if (e.shiftKey) {
       // e.target?.dispatch(e)
     } else {
@@ -23,8 +22,8 @@
         hideMenu()
       }else{
         contextMenu.style.display = 'block';
-        contextMenu.style.left = e.pageX + "px"
-        contextMenu.style.top = e.pageY + "px"
+        contextMenu.style.left = (e.detail ? e.detail.pageX : e.pageX) + "px"
+        contextMenu.style.top = (e.detail ? e.detail.pageY : e.pageY) + "px"
       }
     }
   }

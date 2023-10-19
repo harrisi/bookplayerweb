@@ -82,6 +82,16 @@
     }
   })
 
+  const emitEvent = (e: MouseEvent) => {
+    document.dispatchEvent(new CustomEvent('contextmenu', {
+      ...e,
+      detail: {
+        pageX: e.pageX,
+        pageY: e.pageY,
+      }
+    }))
+  }
+
 </script>
 
 <div id='container'>
@@ -94,7 +104,7 @@
       <div class='details'>{item.details}</div>
     </div>
     <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
-    <button on:click|preventDefault|stopPropagation={console.log}>
+    <button on:click|preventDefault|stopPropagation={emitEvent}>
       <p>...</p>
     </button>
   </div>
