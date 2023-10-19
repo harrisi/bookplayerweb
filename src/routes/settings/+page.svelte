@@ -1,6 +1,28 @@
 <script lang='ts'>
   import { settings } from '$lib/settings'
+  import * as devalue from 'devalue'
+  import { onDestroy, onMount } from 'svelte'
 
+  const onChange = () => {
+    let str = devalue.stringify($settings)
+    try {
+      localStorage.setItem('settings', str)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  onMount(() => {
+    document.querySelectorAll('input').forEach(el => {
+      el.addEventListener('change', onChange)
+    })
+  })
+
+  onDestroy(() => {
+    document.querySelectorAll('input').forEach(el => {
+      el.removeEventListener('change', onChange)
+    })
+  })
 </script>
 
 <h1>Settings</h1>

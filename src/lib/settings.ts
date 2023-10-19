@@ -1,5 +1,6 @@
 import type { Writable } from 'svelte/store'
 import { createWritable, getStore } from './store'
+import * as devalue from 'devalue'
 
 type Setting<T> = {
   opt: T,
@@ -114,6 +115,10 @@ let _default: Settings = {
   },
 }
 
-const settings: Writable<Settings> = getStore('settings', _default)
+const storedSettings = localStorage.getItem('settings')
+
+const settings: Writable<Settings> = getStore('settings', storedSettings && devalue.parse(storedSettings) || _default)
+
+if (!storedSettings) localStorage.setItem('settings', devalue.stringify(_default))
 
 export { type Setting, type Settings, settings }
