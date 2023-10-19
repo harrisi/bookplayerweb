@@ -44,31 +44,31 @@
   }
 
   const rightClick = (e: MouseEvent) => {
-    console.log('rightclick')
     if (e.shiftKey) {
-      // e.target?.dispatch(e)
+      return
     } else {
       if (contextMenu.style.display == 'block') {
         hideMenu(e)
       }
-        let target = e.target as HTMLElement
-        if (target.classList.contains('item')) {
-          opts = itemOpts
-        } else if (target.classList.contains('library')) {
-          opts = libraryOpts
-        } else if (target.classList.contains('cm')) {
-          e.preventDefault()
-          return false
-        } else {
-          return false
-        }
 
+      let target = e.target as HTMLElement
+      if (e.detail || target.classList.contains('item')) {
+        opts = itemOpts
+      } else if (target.classList.contains('library')) {
+        opts = libraryOpts
+      } else if (target.classList.contains('cm')) {
         e.preventDefault()
+        return
+      } else {
+        opts = []
+        return
+      }
 
-        contextMenu.style.display = 'block';
-        contextMenu.style.left = (e.detail ? e.detail.pageX : e.pageX) + "px"
-        contextMenu.style.top = (e.detail ? e.detail.pageY : e.pageY) + "px"
-      // }
+      e.preventDefault()
+
+      contextMenu.style.display = 'block';
+      contextMenu.style.left = (e.detail ? e.detail.pageX : e.pageX) + "px"
+      contextMenu.style.top = (e.detail ? e.detail.pageY : e.pageY) + "px"
     }
   }
 </script>
