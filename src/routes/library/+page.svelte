@@ -8,6 +8,8 @@
   import { ItemType, type Item } from '$lib/types'
   import { fade } from 'svelte/transition';
   import Bookmarks from '$lib/components/Bookmarks.svelte'
+  import Grid from './Grid.svelte'
+
   let token = browser ? localStorage.getItem('token') : ''
   if (!token && browser) goto('/')
   let items: Item[]
@@ -52,19 +54,19 @@ loading..
 {:then _}
 <div class='library'>
   <button id='home' on:click={loadRoot}>home</button>
-  <div id='grid' class='library' transition:fade>
+  <Grid>
   {#each items as item (item.relativePath)}
     {#if item.type !== ItemType.File}
-      <button in:fade|global on:click={() => folderClick(item.title ?? '')}>
+      <button draggable="true" in:fade|global on:click={() => folderClick(item.title ?? '')}>
         <FolderItem {item}></FolderItem>
       </button>
     {:else if item.type === ItemType.File}
-      <button in:fade|global on:click={() => setPlayer(item)}>
+      <button draggable="true" in:fade|global on:click={() => setPlayer(item)}>
         <FileItem {item}></FileItem>
       </button>
     {/if}
   {/each}
-  </div>
+  </Grid>
 </div>
 {:catch err}
   {err}
@@ -78,34 +80,6 @@ loading..
 {/if}
 
 <style>
-  #grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-auto-rows: auto;
-    gap: 8px;
-    margin: 8px;
-  }
-
-  @media screen and (max-width: 768px) {
-    #grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media screen and (min-width: 769px) and (max-width: 1175px) {
-    #grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  #flex {
-    display: flex;
-    flex-wrap: wrap;
-    flex: 1 1 0px;
-    gap: 8px;
-    margin: 8px;
-  }
-
   button {
     color: inherit;
     background-color: var(--systemBackground);
