@@ -1,4 +1,5 @@
 <script lang='ts'>
+  import { settings } from '$lib/settings'
   import { onDestroy, onMount } from "svelte"
 
   let contextMenu: HTMLDivElement
@@ -45,7 +46,7 @@
   }
 
   const rightClick = (e: MouseEvent) => {
-    if (e.shiftKey) {
+    if (!($settings.general.contextMenu.opt) || e.shiftKey) {
       return
     } else {
       if (contextMenu.style.display == 'block') {
