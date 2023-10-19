@@ -50,8 +50,9 @@
 {#await loadRoot()}
 loading..
 {:then _}
+<div class='library'>
   <button id='home' on:click={loadRoot}>home</button>
-  <div id='grid' transition:fade>
+  <div id='grid' class='library' transition:fade>
   {#each items as item (item.relativePath)}
     {#if item.type !== ItemType.File}
       <button in:fade|global on:click={() => folderClick(item.title ?? '')}>
@@ -64,6 +65,7 @@ loading..
     {/if}
   {/each}
   </div>
+</div>
 {:catch err}
   {err}
 {/await}

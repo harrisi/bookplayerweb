@@ -30,24 +30,19 @@
 
 </script>
 
-<div id='container'>
-  <div id='artwork' style={thumbnailCSS}>
-    <div class='duration'>{formatTime(item.duration ?? 0)}</div>
+<div id='container' class='item'>
+  <div id='artwork' class='item' style={thumbnailCSS}>
+    <div class='item duration'>{formatTime(item.duration ?? 0)}</div>
   </div>
-  <div id='info'>
-    <div id='text'>
-      <div class='title'>{item.title}</div>
-      <div class='details'>{item.details}</div>
+  <div id='info' class='item'>
+    <div id='text' class='item'>
+      <div class='item title'>{item.title}</div>
+      <div class='item details'>{item.details}</div>
     </div>
     <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
-    <button on:click|preventDefault|stopPropagation={emitEvent}>
+    <button class='item' on:click|preventDefault|stopPropagation={emitEvent}>
       <p>...</p>
     </button>
-    <!-- <select>
-      <option>...</option>
-      <option>do A</option>
-      <option>do B</option>
-    </select> -->
   </div>
 </div>
 

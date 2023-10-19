@@ -60,15 +60,15 @@
       },
     }).then(res => res.blob())
 
-    console.log(item.relativePath)
+    // console.log(item.relativePath)
     let maybeID3 = await firstFrame.slice(0, 3).text()
-    console.log('maybeID3', maybeID3)
+    // console.log('maybeID3', maybeID3)
     if (maybeID3 !== 'ID3') return
     let sizeBuf = await firstFrame.slice(6, 10).arrayBuffer()
     let sizeView = new Int8Array(sizeBuf)
     let bin = [...sizeView].map(n => n.toString(2).padStart(8, '0').slice(1)).join('')
-    console.log('bin', bin)
-    console.log('binVal', parseInt(bin, 2))
+    // console.log('bin', bin)
+    // console.log('binVal', parseInt(bin, 2))
     let fullID3 = await fetch(content.url, {
       headers: {
         Range: `bytes=0-${parseInt(bin, 2)}`,
@@ -76,7 +76,7 @@
     }).then(res => res.arrayBuffer())
 
     let tags = read(Buffer.from(fullID3))
-    console.dir(tags)
+    // console.dir(tags)
     if (typeof tags.image === 'object') {
       thumbnail = tags.image.imageBuffer
     }
@@ -94,17 +94,17 @@
 
 </script>
 
-<div id='container'>
-  <div id='artwork' style={thumbnailCSS}>
-    <div class='duration'>{formatTime(item.duration ?? 0)}</div>
+<div id='container' class='item'>
+  <div id='artwork' class='item' style={thumbnailCSS}>
+    <div class='item duration'>{formatTime(item.duration ?? 0)}</div>
   </div>
-  <div id='info'>
-    <div id='text'>
-      <div class='title'>{item.title}</div>
-      <div class='details'>{item.details}</div>
+  <div id='info' class='item'>
+    <div id='text' class='item'>
+      <div class='item title'>{item.title}</div>
+      <div class='item details'>{item.details}</div>
     </div>
     <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
-    <button on:click|preventDefault|stopPropagation={emitEvent}>
+    <button class='item' on:click|preventDefault|stopPropagation={emitEvent}>
       <p>...</p>
     </button>
   </div>
