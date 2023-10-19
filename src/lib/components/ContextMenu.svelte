@@ -19,6 +19,7 @@
     item('Move'),
     item('Download'),
     item('Remove download'),
+    item('Set artwork'),
   ]
 
   let libraryOpts = [
