@@ -6,12 +6,8 @@
   import { library } from '$lib/api'
   import { Buffer } from 'buffer'
   import { read } from 'node-id3'
-  import process from 'process'
-  import { Stream } from 'stream'
-  import * as mm from 'music-metadata-browser'
 
   window.Buffer = Buffer
-  window.process = process
 
   let thumbnail: Buffer | undefined
 
@@ -36,47 +32,54 @@
   }
 
   onMount(async () => {
-    // if (!item.relativePath.toLowerCase().endsWith('.mp3')) return
+    if (!item.relativePath.toLowerCase().endsWith('.mp3')) return
 
-    let content = localStorage.getItem(`relativePath=${item.relativePath}`) ?? await library.getContent({
+    let content = await library.getContent({
       relativePath: item.relativePath,
       sign: true,
       noLastItemPlayed: true,
     }).then(res => res.content[0])
 
-    let url = typeof content === 'string' ? content : content.url
-    let tagsMM = await mm.fetchFromUrl(url, { skipPostHeaders: true }).catch(console.error)
-
-    if (tagsMM && tagsMM.common && tagsMM.common.picture) {
-      thumbnail = mm.selectCover(tagsMM.common.picture)?.data
-    }
-
-    // let firstFrame = await fetch(content.url, {
-    //   headers: {
-    //     Range: 'bytes=0-9',
-    //   },
-    // }).then(res => res.blob())
-
-    // console.log(item.relativePath)
-    // let maybeID3 = await firstFrame.slice(0, 3).text()
-    // console.log('maybeID3', maybeID3)
-    // if (maybeID3 !== 'ID3') return
-    // let sizeBuf = await firstFrame.slice(6, 10).arrayBuffer()
-    // let sizeView = new Int8Array(sizeBuf)
-    // let bin = [...sizeView].map(n => n.toString(2).padStart(8, '0').slice(1)).join('')
-    // console.log('bin', bin)
-    // console.log('binVal', parseInt(bin, 2))
-    // let fullID3 = await fetch(content.url, {
-    //   headers: {
-    //     Range: `bytes=0-${parseInt(bin, 2)}`,
+    // let url = typeof content === 'string' ? content : content.url
+    // let tagsMM = mm.fetchFromUrl(url, { skipPostHeaders: true })
+    // .then(meta => {
+    //   if (meta.common.picture) {
+    //     thumbnail = mm.selectCover(meta.common.picture)?.data
     //   }
-    // }).then(res => res.arrayBuffer())
+    // })
+    // .catch(err => {
+    //   if (err.message === 'Failed to determine audio format') {
+    //     // oh well?
+    //   }
+    //   return null
+    // })
 
-    // let tags = read(Buffer.from(fullID3))
-    // console.dir(tags)
-    // if (typeof tags.image === 'object') {
-    //   thumbnail = tags.image.imageBuffer
-    // }
+    let firstFrame = await fetch(content.url, {
+      headers: {
+        Range: 'bytes=0-9',
+      },
+    }).then(res => res.blob())
+
+    console.log(item.relativePath)
+    let maybeID3 = await firstFrame.slice(0, 3).text()
+    console.log('maybeID3', maybeID3)
+    if (maybeID3 !== 'ID3') return
+    let sizeBuf = await firstFrame.slice(6, 10).arrayBuffer()
+    let sizeView = new Int8Array(sizeBuf)
+    let bin = [...sizeView].map(n => n.toString(2).padStart(8, '0').slice(1)).join('')
+    console.log('bin', bin)
+    console.log('binVal', parseInt(bin, 2))
+    let fullID3 = await fetch(content.url, {
+      headers: {
+        Range: `bytes=0-${parseInt(bin, 2)}`,
+      }
+    }).then(res => res.arrayBuffer())
+
+    let tags = read(Buffer.from(fullID3))
+    console.dir(tags)
+    if (typeof tags.image === 'object') {
+      thumbnail = tags.image.imageBuffer
+    }
   })
 
 </script>
@@ -105,7 +108,7 @@
     justify-content: stretch;
     align-items: end;
     font-size: medium;
-    grid-template-rows: 3fr 1fr;
+    grid-template-rows: 4fr 1fr;
   }
 
   div#artwork {
@@ -143,5 +146,15 @@
   div#info #text {
     display: grid;
     grid-template-rows: 2fr 1fr;
+    height: 0;
+    min-height: 100%;
+  }
+
+  @media screen and (max-width: 1175px) {
+    #text * {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
   }
 </style>

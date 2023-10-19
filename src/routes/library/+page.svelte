@@ -79,14 +79,20 @@ loading..
   #grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    grid-auto-rows: 1fr;
+    grid-auto-rows: auto;
     gap: 8px;
     margin: 8px;
   }
 
   @media screen and (max-width: 768px) {
     #grid {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media screen and (min-width: 769px) and (max-width: 1175px) {
+    #grid {
+      grid-template-columns: repeat(3, 1fr);
     }
   }
 

@@ -48,17 +48,17 @@
     justify-content: stretch;
     align-items: end;
     font-size: medium;
-    grid-template-rows: 3fr 1fr;
+    grid-template-rows: 4fr 1fr;
   }
 
   div#artwork {
     background: var(--thumbnail, linear-gradient(#37398c, #537bc4)) no-repeat;
     border-radius: 8px 8px 0px 0px;
     background-size: cover;
-    height: 100%;
     display: flex;
     justify-content: end;
     align-items: end;
+    aspect-ratio: 1;
   }
 
   div#artwork .duration {
@@ -85,5 +85,13 @@
   div#info #text {
     display: grid;
     grid-template-rows: 2fr 1fr;
+    height: 0;
+    min-height: 100%;
+  }
+
+  #text * {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 </style>
