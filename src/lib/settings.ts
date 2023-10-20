@@ -1,6 +1,7 @@
 import type { Writable } from 'svelte/store'
 import { createWritable, getStore } from './store'
 import * as devalue from 'devalue'
+import { version } from '$app/environment'
 
 type Setting<T> = {
   opt: T,
@@ -62,11 +63,11 @@ let _default: Settings = {
     text: 'Autoplay',
     library: {
       opt: true,
-      text: 'library',
+      text: 'Library',
     },
     restartFinished: {
       opt: true,
-      text: 'restart after finished',
+      text: 'Restart after finished',
     },
   },
   privacy: {
@@ -82,43 +83,57 @@ let _default: Settings = {
       text: 'Skip intervals',
       rewind: {
         opt: 30,
-        text: 'rewind amount',
+        text: 'Rewind amount',
       },
       forward: {
         opt: 30,
-        text: 'skip amount',
+        text: 'Skip amount',
       },
     },
     smartRewind: {
       opt: true,
-      text: 'rewind 30 seconds when paused for over 10 minutes',
+      text: 'Rewind 30 seconds when paused for over 10 minutes',
     },
     boostVolume: {
       opt: false,
-      text: 'boost volume',
+      text: 'Boost volume',
     },
     globalSpeed: {
       opt: true,
-      text: 'set speed for all books',
+      text: 'Set speed for all books',
     },
     progressLabels: {
       text: 'Progress labels',
       remainingTime: {
         opt: true,
-        text: 'show remaining time',
+        text: 'Show remaining time',
       },
       chapterContext: {
         opt: true,
-        text: 'show chapter context',
+        text: 'Show chapter context',
       },
     },
   },
 }
 
-const storedSettings = localStorage.getItem('settings')
+const settingsStr = `settings-${version}`
 
-const settings: Writable<Settings> = getStore('settings', storedSettings && devalue.parse(storedSettings) || _default)
+let prevVersion = localStorage.getItem('prevVersion')
+if (prevVersion !== version)
+  localStorage.removeItem(`settings-${prevVersion}`)
+localStorage.setItem('prevVersion', version)
 
-if (!storedSettings) localStorage.setItem('settings', devalue.stringify(_default))
+const versioned = {
+  get settings() { return localStorage.getItem(settingsStr) ?? ''},
+  set settings(val: string) { localStorage.setItem(settingsStr, val) },
+}
 
-export { type Setting, type Settings, settings }
+// const storedSettings = localStorage.getItem(settingsStr)
+
+const settings: Writable<Settings> = getStore('settings', versioned.settings && devalue.parse(versioned.settings) || _default)
+
+if (!versioned.settings)
+  versioned.settings = devalue.stringify(_default)
+  // localStorage.setItem(settingsStr, devalue.stringify(_default))
+
+export { type Setting, type Settings, settings, versioned }
