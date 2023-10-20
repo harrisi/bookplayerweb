@@ -54,19 +54,23 @@ loading..
 {:then _}
 <div class='library'>
   <button id='home' on:click={loadRoot}>home</button>
-  <Grid>
-  {#each items as item (item.relativePath)}
+  {#key items.toString()}
+  <Grid bind:items>
+  {#each items.toSorted((a, b) =>
+    (a.orderRank ?? 0) - (b.orderRank ?? 0)
+  ) as item, i (item.relativePath)}
     {#if item.type !== ItemType.File}
-      <button draggable="true" in:fade|global on:click={() => folderClick(item.title ?? '')}>
+      <button id={i.toString()} draggable="true" in:fade|global on:click={() => folderClick(item.title ?? '')}>
         <FolderItem {item}></FolderItem>
       </button>
     {:else if item.type === ItemType.File}
-      <button draggable="true" in:fade|global on:click={() => setPlayer(item)}>
+      <button id={i.toString()} draggable="true" in:fade|global on:click={() => setPlayer(item)}>
         <FileItem {item}></FileItem>
       </button>
     {/if}
   {/each}
   </Grid>
+  {/key}
 </div>
 {:catch err}
   {err}

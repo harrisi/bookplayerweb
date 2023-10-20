@@ -1,6 +1,10 @@
 <script lang='ts'>
-  import { onMount } from "svelte"
+    import { library } from "$lib/api"
+  import type { Item } from "$lib/types"
+  import { onDestroy, onMount } from "svelte"
   import { fade } from "svelte/transition"
+
+  export let items: Item[]
 
   let grid: HTMLDivElement
 
@@ -34,6 +38,23 @@
     }
 
     if (dragSrcEl != this) {
+      let from = parseInt(this.id)
+      let to = parseInt(dragSrcEl.id)
+      ;[
+        items[from].orderRank,
+        items[to].orderRank,
+      ] = [
+        items[to].orderRank,
+        items[from].orderRank,
+      ]
+      let start = Math.min(from, to)
+      let end = Math.max(from, to)
+      for (let i = from; i <= to; i++) {
+        library.updateMetadata(items[i])
+      }
+      // library.updateMetadata(items[from])
+      // library.updateMetadata(items[to])
+
       this.replaceWith(this, dragSrcEl);
     }
     return false;
@@ -41,19 +62,31 @@
 
   function handleDragEnd(e) {
     this.style.opacity = "1";
-    items.forEach(function(item) {
-      item.classList.remove("over");
+    grid.childNodes.forEach(function(item) {
+      if (item.classList)
+        item.classList.remove("over");
     });
   }
 
   onMount(() => {
     for (let child of grid.children) {
-      child.addEventListener("dragstart", handleDragStart, false);
-      child.addEventListener("dragenter", handleDragEnter, false);
-      child.addEventListener("dragover", handleDragOver, false);
-      child.addEventListener("dragleave", handleDragLeave, false);
-      child.addEventListener("drop", handleDrop, false);
-      child.addEventListener("dragend", handleDragEnd, false);
+      child.addEventListener("dragstart", handleDragStart);
+      child.addEventListener("dragenter", handleDragEnter);
+      child.addEventListener("dragover", handleDragOver);
+      child.addEventListener("dragleave", handleDragLeave);
+      child.addEventListener("drop", handleDrop);
+      child.addEventListener("dragend", handleDragEnd);
+    }
+  })
+
+  onDestroy(() => {
+    for (let child of grid.children) {
+      child.removeEventListener("dragstart", handleDragStart);
+      child.removeEventListener("dragenter", handleDragEnter);
+      child.removeEventListener("dragover", handleDragOver);
+      child.removeEventListener("dragleave", handleDragLeave);
+      child.removeEventListener("drop", handleDrop);
+      child.removeEventListener("dragend", handleDragEnd);
     }
   })
 </script>
