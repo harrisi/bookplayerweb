@@ -160,6 +160,14 @@
     color: var(--lightPrimary);
   }
 
+  input[type=text],input[type=number] {
+    height: 100%;
+    font-size: 30px;
+    width: 100px;
+    border: 0;
+    padding: 0;
+  }
+
   input[type='checkbox']:not(:checked)::before {
     width: 50;
     height: 50px;
