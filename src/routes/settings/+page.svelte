@@ -156,17 +156,17 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     text-align: center;
-    line-height: 50px;
     margin: 0;
-    color: var(--primary);
+    color: var(--lightPrimary);
   }
 
   input[type='checkbox']:not(:checked)::before {
     width: 50;
     height: 50px;
     appearance: none;
-    background: red;
+    background: lightcoral;
     content: 'x';
+    font: 34px bold;
   }
 
   input[type='checkbox']:not(:checked)::after {
@@ -187,7 +187,8 @@
     width: 50px;
     height: 50px;
     appearance: none;
-    background: blue;
+    background: lightblue;
     content: '✓';
+    font: 38px bold;
   }
 </style>
