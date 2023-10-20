@@ -1,7 +1,8 @@
 <script lang='ts'>
-  import type { Item } from '$lib/types'
-  export let item: Item
-  import Percent from './Percent.svelte'
+import { settings } from '$lib/settings'
+import type { Item } from '$lib/types'
+export let item: Item
+import Percent from './Percent.svelte'
 
   const formatTime = (n: number) => {
     const hours = Math.floor(n / 3600),
@@ -40,7 +41,7 @@
       <div class='item details'>{item.details}</div>
     </div>
     <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
-    <button class='item' on:click|preventDefault|stopPropagation={emitEvent}>
+    <button style='{!$settings.general.contextMenu.opt ? 'display: inline !important;' : ''}' class='item' on:click|preventDefault|stopPropagation={emitEvent}>
       <p>...</p>
     </button>
   </div>

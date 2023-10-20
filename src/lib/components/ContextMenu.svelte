@@ -46,7 +46,7 @@
   }
 
   const rightClick = (e: MouseEvent) => {
-    if (!($settings.general.contextMenu.opt) || e.shiftKey) {
+    if (!($settings.general.contextMenu.opt || e.detail) || e.shiftKey) {
       return
     } else {
       if (contextMenu.style.display == 'block') {

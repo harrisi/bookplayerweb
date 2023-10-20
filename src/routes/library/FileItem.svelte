@@ -6,6 +6,7 @@
   import { library } from '$lib/api'
   import { Buffer } from 'buffer'
   import { read } from 'node-id3'
+  import { settings } from '$lib/settings'
 
   window.Buffer = Buffer
 
@@ -104,7 +105,7 @@
       <div class='item details'>{item.details}</div>
     </div>
     <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
-    <button class='item' on:click|preventDefault|stopPropagation={emitEvent}>
+    <button style='{!$settings.general.contextMenu.opt ? 'display: inline !important;' : ''}' class='item' on:click|preventDefault|stopPropagation={emitEvent}>
       <p>...</p>
     </button>
   </div>
