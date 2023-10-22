@@ -277,6 +277,7 @@
     border-radius: 5px;
     border: 1px solid var(--primary);
     box-shadow: 1px 1px 1px gray;
+    cursor: pointer;
   }
 
   #player {
