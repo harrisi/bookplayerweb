@@ -1,3 +1,7 @@
+<script context='module'>
+  let userInteracted = false
+</script>
+
 <script lang='ts'>
   import { onDestroy, onMount } from "svelte";
   import { library } from "$lib/api";
@@ -102,8 +106,8 @@
     if ((Math.abs(a.currentTime - currentTime) > 1)) {
       a.currentTime = currentTime
     }
-    if (playable) {
-      // a.play()
+    if (playable && userInteracted) {
+      a.play()
       a.removeEventListener('canplay', canplay)
       a.addEventListener('play', canplay)
     }
@@ -156,7 +160,9 @@
     audioEl.addEventListener('volumechange', () => console.log(`volumechange; ${currentTime}, ${audioEl.currentTime}`))
     audioEl.addEventListener('waiting', () => console.log(`waiting; ${currentTime}, ${audioEl.currentTime}`))
 
-    // audioEl.play().then(() => playable = true).catch(() => playable = false)
+    if (userInteracted) {
+      audioEl.play().then(() => playable = true).catch(() => playable = false)
+    }
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title,
@@ -168,6 +174,7 @@
   })
 
   const playPause = () => {
+    if (!userInteracted) userInteracted = true
     if (audioEl.paused) {
       audioEl.play()
     } else {
