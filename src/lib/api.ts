@@ -23,8 +23,10 @@ const raw = async (method: HttpMethod, path: string, body?: BodyInit | object | 
   if (keepalive) {
     opts.keepalive = true
   }
+  headers.append('If-Modified-Since', new Date().toISOString())
   const f = await fetch(`${root}${path}`, opts).then(resp => resp.json())
-  .catch(err => console.error(err))
+  .catch(console.error)
+  // .catch(err => console.error(err))
 
   return f
 }
@@ -76,12 +78,20 @@ const library = Object.freeze({
     if (noLastItemPlayed != undefined) params.push(`noLastItemPlayed=${encodeURIComponent(noLastItemPlayed)}`)
 
     if (params.length) path += '?' + params.join('&')
-    let res = await apiCall.get(path, keepalive).catch(console.error)
+    let res
+    try {
+      res = await apiCall.get(path, keepalive).catch(err => {
+        console.log('got err from getContent')
+        console.error(err)
+      })
+    } catch (err) {
+      console.log('getContent try')
+      console.error(err)
+    }
     let i = 0
     for (let item of res.content) {
       // this will happen if sign=true and the url isn't expired
       if (item.url) {
-        console.log(`${item.relativePath}.url: ${item.url}`)
         localStorage.setItem(`relativePath=${item.relativePath ?? '/'}`, item.url)
       } else {
         // but if we passed sign, we still want to add the url from cache.
