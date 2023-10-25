@@ -1,7 +1,9 @@
 <script lang='ts'>
+  export let item: Item
+
   import type { Item } from '$lib/types'
   import { onMount } from 'svelte'
-  export let item: Item
+  import { formatTime } from '$lib/util'
   import Percent from './Percent.svelte'
   import { library } from '$lib/api'
   import { settings } from '$lib/settings'
@@ -12,20 +14,6 @@
   window.process = process
 
   let thumbnail: Buffer | undefined
-
-  const formatTime = (n: number) => {
-    const hours = Math.floor(n / 3600),
-      minutes = Math.floor((n % 3600) / 60),
-      seconds = Math.floor(n % 60),
-      parts = []
-
-    if (hours > 0) parts.push(String(hours).padStart(2, '0'))
-    if (minutes > 0 || hours > 0) parts.push(String(minutes).padStart(2, '0'))
-    parts.push(String(seconds).padStart(2, '0'))
-
-    return parts.join(':')
-  }
-
   let thumbnailCSS: string | undefined
 
   $: {
