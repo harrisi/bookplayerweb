@@ -18,13 +18,15 @@ Sentry.init({
   // If you don't want to use Session Replay, just remove the line below:
   integrations: [new Replay()],
 
-  beforeSend(event) {
-    let { disableCrashReports } = get(settings).privacy
-    if (disableCrashReports.opt) {
-      console.log('not sending crash report')
+  beforeSend(event, hint) {
+    const error = hint.originalException
+    if (error && error.message && error.message.match(/Fetch is aborted/)) {
       return null
     }
-    console.log('sending crash report')
+    let { disableCrashReports } = get(settings).privacy
+    if (disableCrashReports.opt) {
+      return null
+    }
     return event
   }
 });
