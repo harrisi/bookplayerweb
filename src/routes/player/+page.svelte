@@ -12,6 +12,8 @@
   import { parseBuffer } from 'music-metadata'
   import { read } from 'node-id3'
   import Slider from "./Slider.svelte";
+  import { settings } from "$lib/settings";
+  import { formatTime } from "$lib/util"
 
   // const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
 
@@ -39,11 +41,17 @@
   let lastUpdate: number | undefined
   let store = getStore(relativePath, percentCompleted)
   let playable = false
-  let skipTime = 30
   let audioEl: HTMLAudioElement
   let sleepTimer: string
   let sleepTimerEl: HTMLSelectElement
   let playing = false
+  // const captureStream: MediaStream
+  const contextOpts: AudioContextOptions = {
+    latencyHint: 'playback', // 'balanced', 'interactive' (default), 'playback'
+  }
+  const context = new AudioContext(contextOpts)
+  const gainNode = context.createGain()
+  gainNode.gain.value = $settings.playback.boostVolume.opt ? 2 : 1
 
   // worker.postMessage({ relativePath })
   // worker.addEventListener('message', ({ data }) => {
@@ -128,37 +136,45 @@
     console.dir(tags)
   }
 
+  const logTimes = (s: string) => {
+    console.log(`${s}; ${currentTime}, ${audioEl && (audioEl.currentTime || '(N/A)')}, ${new Date()}`)
+  }
+
   onMount(() => {
+    let track = context.createMediaElementSource(audioEl)
+    console.log(gainNode.gain.value)
+    track.connect(gainNode).connect(context.destination)
+
     window.Buffer = Buffer
     audioEl.preservesPitch = true
     audioEl.webkitPreservesPitch = true
-    // audioEl.addEventListener('audioprocess', () => console.log(`audioprocess; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('canplay', e => console.log(`canplay; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('canplaythrough', () => console.log(`canplaythrough; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('complete', () => console.log(`complete; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('durationchange', () => console.log(`durationchange; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('emptied', () => console.log(`emptied; ${currentTime}, ${audioEl.currentTime}`))
+    // audioEl.addEventListener('audioprocess', () => logTimes('audioprocess'))
+    // audioEl.addEventListener('canplay', e => logTimes('canplay'))
+    // audioEl.addEventListener('canplaythrough', () => logTimes('canplaythrough'))
+    // audioEl.addEventListener('complete', () => logTimes('complete'))
+    // audioEl.addEventListener('durationchange', () => logTimes('durationchange'))
+    // audioEl.addEventListener('emptied', () => logTimes('emptied'))
 
-    audioEl.addEventListener('ended', updateMetadata)
+    audioEl.addEventListener('ended', () => { logTimes('ended'); updateMetadata() })
 
-    // audioEl.addEventListener('loadeddata', () => console.log(`loadeddata; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('loadedmetadata', () => { console.log(`loadedmetadata; ${currentTime}, ${audioEl.currentTime}`); loadedMetadata() })
-    // audioEl.addEventListener('loadstart', () => console.log(`loadstart; ${currentTime}, ${audioEl.currentTime}`))
+    // audioEl.addEventListener('loadeddata', () => logTimes('loadeddata'))
+    audioEl.addEventListener('loadedmetadata', () => { logTimes('loadedmetadata'); loadedMetadata() })
+    // audioEl.addEventListener('loadstart', () => logTimes('loadstart'))
 
-    audioEl.addEventListener('pause', updateMetadata)
+    audioEl.addEventListener('pause', () => { logTimes('pause'); updateMetadata() })
 
-    // audioEl.addEventListener('play', () => console.log(`play; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('playing', () => console.log(`playing; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('ratechange', () => console.log(`ratechange; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('seeked', () => console.log(`seeked; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('seeking', () => console.log(`seeking; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('stalled', () => console.log(`stalled; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('suspend', () => console.log(`suspend; ${currentTime}, ${audioEl.currentTime}`))
+    // audioEl.addEventListener('play', () => logTimes('play'))
+    // audioEl.addEventListener('playing', () => logTimes('playing'))
+    // audioEl.addEventListener('ratechange', () => logTimes('ratechange'))
+    // audioEl.addEventListener('seeked', () => logTimes('seeked'))
+    // audioEl.addEventListener('seeking', () => logTimes('seeking'))
+    // audioEl.addEventListener('stalled', () => logTimes('stalled'))
+    // audioEl.addEventListener('suspend', () => logTimes('suspend'))
 
-    audioEl.addEventListener('timeupdate', () => { console.log(`timeupdate; ${currentTime}, ${audioEl.currentTime}`); $store = (audioEl.currentTime / audioEl.duration) * 100 })
+    audioEl.addEventListener('timeupdate', () => { logTimes('timeupdate'); $store = (audioEl.currentTime / audioEl.duration) * 100 })
 
-    // audioEl.addEventListener('volumechange', () => console.log(`volumechange; ${currentTime}, ${audioEl.currentTime}`))
-    // audioEl.addEventListener('waiting', () => console.log(`waiting; ${currentTime}, ${audioEl.currentTime}`))
+    // audioEl.addEventListener('volumechange', () => logTimes('volumechange'))
+    // audioEl.addEventListener('waiting', () => logTimes('waiting'))
 
     if (userInteracted) {
       audioEl.play().then(() => playable = true).catch(() => playable = false)
@@ -174,6 +190,7 @@
   })
 
   const playPause = () => {
+    if (context.state === 'suspended') context.resume()
     if (!userInteracted) userInteracted = true
     if (audioEl.paused) {
       audioEl.play()
@@ -200,9 +217,8 @@
     setTimeout(() => {
       audioEl.pause()
       sleepTimerEl.value = 'Sleep timer'
-    }, parseInt(minutes) * 1000)
+    }, parseInt(minutes) * 60 * 1000)
   }
-
 </script>
 
 {#if loading}
@@ -219,8 +235,15 @@
         <span id='author'>{details}</span>
       </div>
 
-      <Slider min=0 max={Math.ceil(duration)} bind:value={currentTime} />
+      <div class='progressContainer'>
+        <div class='times'>
+          <div class='currentTime'>{formatTime(currentTime)}</div>
+          <div class='duration'>{formatTime(duration)}</div>
+        </div>
+        <Slider min=0 max={Math.ceil(duration)} bind:value={currentTime} />
+      </div>
     </div>
+
 
     <div id='right'>
       <!-- svelte-ignore a11y-label-has-associated-control -->
@@ -229,12 +252,12 @@
         <Slider min='0.5' max=4 step='0.1' bind:value={speed} on:change={() => audioEl.playbackRate = speed} />
       </label>
 
-      <button on:click={() => skip(-skipTime)}>
+      <button on:click={() => skip(-$settings.playback.skipIntervals.rewind.opt)}>
         <svg id='skipReverse' viewBox='0 0 144 156'>
           <path class='reverse'
             d="M 58,154.44025 C 28.852681,148.15898 7.5137784,126.73372 1.5802444,97.792158 -3.4171776,73.416601 5.1212992,47.791696 23.883454,30.85778 35.229927,20.61694 47.839792,14.851346 63.587396,12.703992 l 8.32303,-1.134933 0.294787,-5.0251639 c 0.223199,-3.8048282 0.710918,-5.1042516 2.008353,-5.350837 1.71821,-0.32655597 25.709002,13.0936899 26.943914,15.0721969 1.4137,2.264944 -0.85459,4.06878 -12.38409,9.848341 -14.691884,7.364817 -16.160579,7.365183 -16.580237,0.0041 l -0.306847,-5.382271 -6.693153,0.685218 C 51.250872,22.848028 38.033046,29.265703 27.649374,39.649374 20.363481,46.935268 15.826422,54.142891 12.217015,64.165396 9.8938523,70.616292 9.5756023,73.006059 9.5756023,84 c 0,10.993941 0.31825,13.383708 2.6414127,19.8346 3.609407,10.02251 8.146466,17.23013 15.432359,24.51603 7.285894,7.28589 14.493517,11.82295 24.516022,15.43235 6.450896,2.32317 8.840663,2.64142 19.834604,2.64142 10.993941,0 13.383708,-0.31825 19.834604,-2.64142 10.022506,-3.6094 17.230126,-8.14646 24.516026,-15.43235 10.65058,-10.65059 16.97839,-23.96819 18.26348,-38.437577 C 135.34036,81.735875 136.18235,80 139.42244,80 c 4.94178,0 5.71005,4.560474 2.99732,17.792158 C 138.4493,117.15856 127.49241,133.3571 110.93527,144.33842 96.040366,154.2173 75.316862,158.17204 58,154.44025 Z"
             id="path2" />
-          <text x='50%' y='50%' dominant-baseline='central' baseline-shift=-5 text-anchor='middle'>-{skipTime}</text>
+          <text x='50%' y='50%' dominant-baseline='central' baseline-shift=-5 text-anchor='middle'>-{$settings.playback.skipIntervals.rewind.opt}</text>
         </svg>
       </button>
 
@@ -252,12 +275,12 @@
         {/if}
       </button>
 
-      <button on:click={() => skip(+skipTime)}>
+      <button on:click={() => skip(+$settings.playback.skipIntervals.forward.opt)}>
         <svg id='skip' viewBox='0 0 144 156'>
           <path
             d="M 58,154.44025 C 28.852681,148.15898 7.5137784,126.73372 1.5802444,97.792158 -3.4171776,73.416601 5.1212992,47.791696 23.883454,30.85778 35.229927,20.61694 47.839792,14.851346 63.587396,12.703992 l 8.32303,-1.134933 0.294787,-5.0251639 c 0.223199,-3.8048282 0.710918,-5.1042516 2.008353,-5.350837 1.71821,-0.32655597 25.709002,13.0936899 26.943914,15.0721969 1.4137,2.264944 -0.85459,4.06878 -12.38409,9.848341 -14.691884,7.364817 -16.160579,7.365183 -16.580237,0.0041 l -0.306847,-5.382271 -6.693153,0.685218 C 51.250872,22.848028 38.033046,29.265703 27.649374,39.649374 20.363481,46.935268 15.826422,54.142891 12.217015,64.165396 9.8938523,70.616292 9.5756023,73.006059 9.5756023,84 c 0,10.993941 0.31825,13.383708 2.6414127,19.8346 3.609407,10.02251 8.146466,17.23013 15.432359,24.51603 7.285894,7.28589 14.493517,11.82295 24.516022,15.43235 6.450896,2.32317 8.840663,2.64142 19.834604,2.64142 10.993941,0 13.383708,-0.31825 19.834604,-2.64142 10.022506,-3.6094 17.230126,-8.14646 24.516026,-15.43235 10.65058,-10.65059 16.97839,-23.96819 18.26348,-38.437577 C 135.34036,81.735875 136.18235,80 139.42244,80 c 4.94178,0 5.71005,4.560474 2.99732,17.792158 C 138.4493,117.15856 127.49241,133.3571 110.93527,144.33842 96.040366,154.2173 75.316862,158.17204 58,154.44025 Z"
             id="path1" />
-          <text x='50%' y='50%' dominant-baseline='middle' baseline-shift=-5 text-anchor='middle'>+{skipTime}</text>
+          <text x='50%' y='50%' dominant-baseline='middle' baseline-shift=-5 text-anchor='middle'>+{$settings.playback.skipIntervals.forward.opt}</text>
         </svg>
       </button>
 
@@ -271,6 +294,21 @@
 </Overlay>
 
 <style>
+  .progressContainer {
+    margin: 10px;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .progressContainer .times {
+    display: flex;
+    justify-content: space-between;
+  }
+
   button {
     background-color: var(--systemBackground);
     color: var(--primary);
@@ -332,6 +370,6 @@
   }
 </style>
 
-<audio bind:this={audioEl} bind:playbackRate={speed} src={url?.toString()} bind:currentTime on:canplay={canplay}>
+<audio crossorigin="anonymous" bind:this={audioEl} bind:playbackRate={speed} src={url?.toString()} bind:currentTime on:canplay={canplay}>
   <!-- <source src={url} type="audio/mp3"> -->
 </audio>
