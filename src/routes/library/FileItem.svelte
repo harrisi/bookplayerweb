@@ -4,11 +4,12 @@
   export let item: Item
   import Percent from './Percent.svelte'
   import { library } from '$lib/api'
-  import { Buffer } from 'buffer'
-  import { read } from 'node-id3'
   import { settings } from '$lib/settings'
+  import process from 'process'
+  import { parseReadableStream } from 'music-metadata-browser'
+  import type { Observer } from 'music-metadata/lib/type'
 
-  window.Buffer = Buffer
+  window.process = process
 
   let thumbnail: Buffer | undefined
 
@@ -29,58 +30,39 @@
 
   $: {
     let url = thumbnail && URL.createObjectURL(new Blob([thumbnail]))
-    thumbnailCSS = (url || item.thumbnail) ? `--thumbnail: url(${thumbnail ? url : item.thumbnail})` : undefined
+    thumbnailCSS = (url || item.thumbnail) ? `--thumbnail: url(${url || item.thumbnail})` : undefined
   }
 
   onMount(async () => {
-    if (!item.relativePath.toLowerCase().endsWith('.mp3')) return
-
     let content = await library.getContent({
       relativePath: item.relativePath,
       sign: true,
       noLastItemPlayed: true,
     }).then(res => res.content[0])
 
-    // let url = typeof content === 'string' ? content : content.url
-    // let tagsMM = mm.fetchFromUrl(url, { skipPostHeaders: true })
-    // .then(meta => {
-    //   if (meta.common.picture) {
-    //     thumbnail = mm.selectCover(meta.common.picture)?.data
-    //   }
-    // })
-    // .catch(err => {
-    //   if (err.message === 'Failed to determine audio format') {
-    //     // oh well?
-    //   }
-    //   return null
-    // })
+    const controller = new AbortController()
+    const signal = controller.signal
 
-    let firstFrame = await fetch(content.url, {
-      headers: {
-        Range: 'bytes=0-9',
-      },
-    }).then(res => res.blob())
+    const getExtension = (s: string) => `.${s.split('.').at(-1)}`
 
-    // console.log(item.relativePath)
-    let maybeID3 = await firstFrame.slice(0, 3).text()
-    // console.log('maybeID3', maybeID3)
-    if (maybeID3 !== 'ID3') return
-    let sizeBuf = await firstFrame.slice(6, 10).arrayBuffer()
-    let sizeView = new Int8Array(sizeBuf)
-    let bin = [...sizeView].map(n => n.toString(2).padStart(8, '0').slice(1)).join('')
-    // console.log('bin', bin)
-    // console.log('binVal', parseInt(bin, 2))
-    let fullID3 = await fetch(content.url, {
-      headers: {
-        Range: `bytes=0-${parseInt(bin, 2)}`,
+    const observer: Observer = update => {
+      if (update.tag.id === 'picture') {
+        thumbnail = update.tag.value.data
+        controller.abort('picture')
       }
-    }).then(res => res.arrayBuffer())
-
-    let tags = read(Buffer.from(fullID3))
-    // console.dir(tags)
-    if (typeof tags.image === 'object') {
-      thumbnail = tags.image.imageBuffer
     }
+
+    await fetch(content.url, {
+      mode: 'cors',
+      signal,
+    }).then(async resp => {
+      if (!resp.body) return
+
+      return await parseReadableStream(resp.body, getExtension(item.originalFileName ?? ''), { skipPostHeaders: true, observer })
+      .catch(() => {})
+    })
+    .catch(() => {})
+
   })
 
   const emitEvent = (e: MouseEvent) => {
