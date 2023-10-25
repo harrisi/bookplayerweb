@@ -14,4 +14,4 @@ function getStore<T>(key: string, init?: T): Writable<any> {
   return stores.get(key)!
 }
 
-export { createWritable, getStore }
+export { getStore }
