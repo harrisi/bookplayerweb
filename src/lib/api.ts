@@ -102,11 +102,11 @@ const library = Object.freeze({
   },
 
   createItem: async (item: Item, keepalive?: boolean) => {
-    return await apiCall.put('/library', item, keepalive)
+    return await apiCall.put('/library', item, keepalive).then(res => res.content)
   },
 
   updateMetadata: async (metadata: Item, keepAlive?: boolean) => {
-    return await apiCall.post('/library', metadata, keepAlive).catch(console.error)
+    return await apiCall.post('/library', metadata, keepAlive).then(res => res.content)
   },
 
   moveItem: async (src: Item | string, dest: Item | string, keepalive?: boolean) => {
