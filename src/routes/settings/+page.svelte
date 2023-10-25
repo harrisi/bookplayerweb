@@ -87,13 +87,16 @@
     <label>
       <li>
         {$settings.playback.skipIntervals.forward.text}
-        <input type='number' bind:value={$settings.playback.skipIntervals.forward.opt} />
+        <input type='number' min=0 bind:value={$settings.playback.skipIntervals.forward.opt} />
       </li>
     </label>
     <label>
       <li>
         {$settings.playback.skipIntervals.rewind.text}
-        <input type='number' bind:value={$settings.playback.skipIntervals.rewind.opt} />
+        <div>
+          <span>-</span>
+          <input type='number' min=0 bind:value={$settings.playback.skipIntervals.rewind.opt} />
+        </div>
       </li>
     </label>
     <label>
@@ -163,7 +166,13 @@
     background: var(--tertiarySystemBackground);
   }
 
-  input[type='checkbox'] {
+  input[type=checkbox] {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+  }
+
+  /* input[type='checkbox'] {
     width: 100px;
     height: 50px;
     appearance: none;
@@ -172,7 +181,7 @@
     text-align: center;
     margin: 0;
     color: var(--lightPrimary);
-  }
+  } */
 
   input[type=text],input[type=number] {
     height: 100%;
@@ -182,7 +191,7 @@
     padding: 0;
   }
 
-  input[type='checkbox']:not(:checked)::before {
+  /* input[type='checkbox']:not(:checked)::before {
     width: 50;
     height: 50px;
     appearance: none;
@@ -212,5 +221,5 @@
     background: lightblue;
     content: '✓';
     font: 38px bold;
-  }
+  } */
 </style>
