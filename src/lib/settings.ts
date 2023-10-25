@@ -1,5 +1,5 @@
 import type { Writable } from 'svelte/store'
-import { createWritable, getStore } from './store'
+import { getStore } from './store'
 import * as devalue from 'devalue'
 import { version } from '$app/environment'
 
@@ -73,7 +73,7 @@ let _default: Settings = {
   privacy: {
     text: 'Privacy',
     disableCrashReports: {
-      opt: true,
+      opt: false,
       text: 'Disable crash reporting',
     },
   },
@@ -128,12 +128,9 @@ const versioned = {
   set settings(val: string) { localStorage.setItem(settingsStr, val) },
 }
 
-// const storedSettings = localStorage.getItem(settingsStr)
-
 const settings: Writable<Settings> = getStore('settings', versioned.settings && devalue.parse(versioned.settings) || _default)
 
 if (!versioned.settings)
   versioned.settings = devalue.stringify(_default)
-  // localStorage.setItem(settingsStr, devalue.stringify(_default))
 
 export { type Setting, type Settings, settings, versioned }
