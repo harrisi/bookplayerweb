@@ -2,15 +2,20 @@
   import { versioned, settings } from '$lib/settings'
   import * as devalue from 'devalue'
   import { onDestroy, onMount } from 'svelte'
+  import Percent from '../library/Percent.svelte'
+
+  let estimate: StorageEstimate
 
   const onChange = () => {
     versioned.settings = devalue.stringify($settings)
   }
 
-  onMount(() => {
+  onMount(async () => {
     document.querySelectorAll('input').forEach(el => {
       el.addEventListener('change', onChange)
     })
+
+    estimate = await navigator.storage.estimate()
   })
 
   onDestroy(() => {
@@ -109,6 +114,15 @@
       </li>
     </label>
   </ul>
+
+  <div id='cacheInfo'>
+    {#if estimate}
+      {((estimate?.usage ?? 1) / (estimate?.quota ?? 1) * 100).toFixed(2)}%
+      <Percent relativePath='cacheInfo' percentCompleted={(estimate?.usage ?? 1) / (estimate?.quota ?? 1) * 100} />
+    {/if}
+    <p>Usage: {((estimate?.usage ?? 0) / 1024 / 1024).toFixed(2)}MiB</p>
+    <p>Quota: {((estimate?.quota ?? 1) / 1024 / 1024).toFixed(2)}MiB</p>
+  </div>
 </div>
 
 <style>
