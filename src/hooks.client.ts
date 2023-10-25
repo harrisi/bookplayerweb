@@ -1,5 +1,7 @@
 import { handleErrorWithSentry, Replay } from "@sentry/sveltekit";
 import * as Sentry from '@sentry/sveltekit';
+import { settings } from "$lib/settings";
+import { get } from 'svelte/store'
 
 Sentry.init({
   dsn: 'https://edecafab5ca082c53d921812788e66e3@o241342.ingest.sentry.io/4505955981852672',
@@ -15,6 +17,16 @@ Sentry.init({
   
   // If you don't want to use Session Replay, just remove the line below:
   integrations: [new Replay()],
+
+  beforeSend(event) {
+    let { disableCrashReports } = get(settings).privacy
+    if (disableCrashReports.opt) {
+      console.log('not sending crash report')
+      return null
+    }
+    console.log('sending crash report')
+    return event
+  }
 });
 
 // If you have a custom error handler, pass it to `handleErrorWithSentry`
