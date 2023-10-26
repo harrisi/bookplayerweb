@@ -23,7 +23,7 @@
   let itemOpts = [
     item('Rename', target => {
       console.dir(target)
-    }, false),
+    }),
     item('Move', undefined, true),
     item('Download', undefined, true),
     item('Remove download', undefined, true),
