@@ -220,7 +220,7 @@
     }, parseInt(minutes) * 60 * 1000)
   }
 
-  $: currentChapter = currentTime && chapters &&
+  $: currentChapter = currentTime && chapters && chapters.find &&
     chapters.find(val =>
       val.startTimeMs <= currentTime * 1000 &&
       val.endTimeMs >= currentTime * 1000
@@ -244,7 +244,7 @@
       <div class='progressContainer'>
         <div class='times'>
           <div class='currentTime'>{formatTime(currentTime)}</div>
-          <div class='currentChapter'>{currentChapter && (currentChapter.tags && currentChapter.tags?.title || currentChapter.elementID)}</div>
+          <div class='currentChapter'>{(currentChapter && (currentChapter.tags && currentChapter.tags?.title || currentChapter.elementID)) ?? ''}</div>
           <div class='duration'>{formatTime(duration)}</div>
         </div>
         <Slider min=0 max={Math.ceil(duration)} bind:value={currentTime} />
