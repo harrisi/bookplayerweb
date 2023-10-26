@@ -1,33 +1,40 @@
 <script lang='ts'>
   import { settings } from '$lib/settings'
   import { onDestroy, onMount } from "svelte"
+  import type { MouseEventHandler } from 'svelte/elements'
+
+  let currentTarget: EventTarget
 
   let contextMenu: HTMLDivElement
   interface ContextMenuItem {
     text: string,
-    action?: Function
+    action?: MouseEventHandler<any>,
+    disabled?: boolean,
   }
 
   let opts: ContextMenuItem[] = []
 
-  const item = (text: string, action?: Function): ContextMenuItem => ({
+  const item = (text: string, action?: MouseEventHandler<any>, disabled?: boolean): ContextMenuItem => ({
     text,
     action,
+    disabled,
   })
 
   let itemOpts = [
-    item('Rename'),
-    item('Move'),
-    item('Download'),
-    item('Remove download'),
-    item('Set artwork'),
+    item('Rename', target => {
+      console.dir(target)
+    }, false),
+    item('Move', undefined, true),
+    item('Download', undefined, true),
+    item('Remove download', undefined, true),
+    item('Set artwork', undefined, true),
   ]
 
   let libraryOpts = [
-    item('New folder'),
-    item('Import here'),
-    item('Sort'),
-    item('View'), // grid or list
+    item('New folder', undefined, true),
+    item('Import here', undefined, true),
+    item('Sort', undefined, true),
+    item('View', undefined, true), // grid or list
   ]
 
   onMount(() => {
@@ -81,18 +88,16 @@
 <div bind:this={contextMenu} id="contextMenu" class="context-menu cm" style="display: none">
   <ul class="menu cm">
     {#each opts as opt}
-      <!-- svelte-ignore a11y-invalid-attribute -->
-      <li class='{opt.text} cm'><a href='#' class='cm'>{opt.text}</a></li>
+      <li class='{opt.text} cm'><button on:click={opt.action} class='cm {opt.disabled ? 'disabled' : ''}'>{opt.text}</button></li>
     {/each}
-    <!-- <li class="rename"><a href="#"><i class="fa fa-pencil" aria-hidden="true"></i> Rename</a></li>
-    <li class="copy"><a href="#"><i class="fa fa-copy" aria-hidden="true"></i> Copy to</a></li>
-    <li class="paste"><a href="#"><i class="fa fa-paste" aria-hidden="true"></i> Move to</a></li>
-    <li class="download"><a href="#"><i class="fa fa-download" aria-hidden="true"></i> Download</a></li>
-    <li class="trash"><a href="#"><i class="fa fa-trash" aria-hidden="true"></i> Delete</a></li>  -->
   </ul>
 </div>
 
 <style>
+  button {
+    cursor: pointer;
+  }
+
   ul {
     list-style: none;
     margin: 0;
@@ -112,11 +117,11 @@
     padding: 10px 0;
   }
 
-  .menu > li > a {
+  .menu > li > button {
     font: inherit;
     border: 0;
     padding: 10px 30px 10px 15px;
-    /* width: 100%; */
+    width: 100%;
     display: flex;
     align-items: center;
     position: relative;
@@ -128,16 +133,21 @@
     -moz-transition: 0.5s linear;
     -ms-transition: 0.5s linear;
     -o-transition: 0.5s linear;
+    background-color: var(--secondarySystemBackground);
   }
 
-  .menu > li > a:hover {
+  .menu > li > button:hover:not(.disabled) {
     background: var(--tertiarySystemBackground);
     color: var(--accent);
   }
 
-  a {
-    user-select: none;
-    -moz-user-select: none;
-    -webkit-user-select: none;
+  button.cm.disabled {
+    background-color: gray;
+    text-decoration: line-through;
+    cursor: not-allowed;
+  }
+
+  button.cm {
+    color: var(--primary);
   }
 </style>
