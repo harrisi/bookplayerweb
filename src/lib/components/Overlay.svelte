@@ -7,7 +7,7 @@
     display: flex;
     align-items: center;
     position: sticky;
-    top: var(--top);
+    top: calc(var(--top) + 32px);
     bottom: var(--bottom);
     margin: 8px;
     z-index: 1;

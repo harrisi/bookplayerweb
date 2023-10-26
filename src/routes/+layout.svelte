@@ -25,6 +25,16 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 </svelte:head>
 
+<div id='betaHeader'>
+  <p>
+    This is beta software. Please <a href='https://github.com/TortugaPower/bookplayerweb/issues' target='_blank'>file issues on GitHub</a>,
+    or <a href={`mailto:support@bookplayer.app?subject=${encodeURIComponent('BookPlayer web support')}`}>send an email to support@bookplayer.app</a>.
+  </p>
+  <p>
+    Thanks for testing!
+  </p>
+</div>
+
 {#if popover}
   <Popover />
 {/if}
@@ -158,6 +168,21 @@
     justify-content: space-between;
     align-items: center;
     text-align: center;
+  }
+
+  #betaHeader {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    background-color: var(--accent);
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  #betaHeader p {
+    text-align: center;
+    margin: 0;
   }
 
   :global(body) {
