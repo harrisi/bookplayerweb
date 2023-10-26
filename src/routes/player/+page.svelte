@@ -141,6 +141,7 @@
   }
 
   onMount(() => {
+    if (!currentTime) currentTime = 0
     let track = context.createMediaElementSource(audioEl)
     console.log(gainNode.gain.value)
     track.connect(gainNode).connect(context.destination)
