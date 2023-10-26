@@ -26,7 +26,7 @@
   </div>
   <div id='info' class='item'>
     <div id='text' class='item'>
-      <div class='item title'>{item.title}</div>
+      <input readonly type='text' class='item title' on:click|preventDefault|stopPropagation={console.log} bind:value={item.title}/>
       <div class='item details'>{item.details}</div>
     </div>
     <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
@@ -37,6 +37,22 @@
 </div>
 
 <style>
+  input[type=text] {
+    font-size: 100%;
+    font-family: inherit;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    border: none;
+    background: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  input[type=text]:focus {
+    /* display: none; */
+  }
+
   div#container{
     display: grid;
     height: 100%;
