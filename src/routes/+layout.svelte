@@ -48,25 +48,25 @@
       </div>
       <div id='headerControls'>
         <div id="about">
-          <a href='?about'>
+          <a class='headerButton' href='?about'>
             <span class="material-symbols-outlined">info</span>
             About
           </a>
         </div>
         <div id='library'>
-          <a href='/library'>
+          <a class='headerButton' href='/library'>
             <span class='material-symbols-outlined'>library_books</span>
             Library
           </a>
         </div>
         <div id='settings'>
-          <a href='/settings'>
+          <a class='headerButton' href='/settings'>
             <span class='material-symbols-outlined'>settings</span>
             Settings
           </a>
         </div>
         <div id='loginout'>
-          <a href='/' on:click={() => localStorage.removeItem('token')} id="logout">
+          <a class='headerButton' href='/' on:click={() => localStorage.removeItem('token')} id="logout">
             <span class='material-symbols-outlined'>door_open</span>
             {#if token}
               Logout
@@ -135,7 +135,7 @@
     grid-template-columns: repeat(4, 1fr);
   }
 
-  div#headerControls div a {
+  a.headerButton {
     display: grid;
     grid-template-rows: 1fr auto;
     /* border: 1px solid var(--primary);
