@@ -3,13 +3,10 @@
 
   import type { Item } from '$lib/types'
   import { onMount } from 'svelte'
-  import { formatTime } from '$lib/util'
+  import { formatTime, getMetadata } from '$lib/util'
   import Percent from './Percent.svelte'
-  import { library } from '$lib/api'
   import { settings } from '$lib/settings'
   import process from 'process'
-  import { parseReadableStream } from 'music-metadata-browser'
-  import type { Observer } from 'music-metadata/lib/type'
 
   window.process = process
 
@@ -22,35 +19,14 @@
   }
 
   onMount(async () => {
-    let content = await library.getContent({
-      relativePath: item.relativePath,
-      sign: true,
-      noLastItemPlayed: true,
-    }).then(res => res.content[0])
-
-    const controller = new AbortController()
-    const signal = controller.signal
-
-    const getExtension = (s: string) => `.${s.split('.').at(-1)}`
-
-    const observer: Observer = update => {
-      if (update.tag.id === 'picture') {
-        thumbnail = update.tag.value.data
-        controller.abort('picture')
+    await getMetadata(item, (controller) => {
+      return (update) => {
+        if (update.tag.id === 'picture') {
+          thumbnail = update.tag.value.data
+          controller.abort()
+        }
       }
-    }
-
-    await fetch(content.url, {
-      mode: 'cors',
-      signal,
-    }).then(async resp => {
-      if (!resp.body) return
-
-      return await parseReadableStream(resp.body, getExtension(item.originalFileName ?? ''), { skipPostHeaders: true, observer })
-      .catch(() => {})
     })
-    .catch(() => {})
-
   })
 
   const emitEvent = (e: MouseEvent) => {

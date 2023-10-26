@@ -9,11 +9,9 @@
   import type { Item } from "$lib/types"
   import Overlay from "$lib/components/Overlay.svelte";
   import { Buffer } from 'buffer'
-  import { parseBuffer } from 'music-metadata'
-  import { read } from 'node-id3'
   import Slider from "./Slider.svelte";
   import { settings } from "$lib/settings";
-  import { formatTime } from "$lib/util"
+  import { formatTime, getMetadata } from "$lib/util"
 
   // const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
 
@@ -44,12 +42,14 @@
   let audioEl: HTMLAudioElement
   let sleepTimer: string
   let sleepTimerEl: HTMLSelectElement
+  let metadata: any | undefined
+  let chapters: any[] | undefined
   let playing = false
   // const captureStream: MediaStream
   const contextOpts: AudioContextOptions = {
     latencyHint: 'playback', // 'balanced', 'interactive' (default), 'playback'
   }
-  const context = new AudioContext(contextOpts)
+  const context = new AudioContext()
   const gainNode = context.createGain()
   gainNode.gain.value = $settings.playback.boostVolume.opt ? 2 : 1
 
@@ -121,30 +121,29 @@
     }
   }
 
-  const loadedMetadata = async () => {
-    return;
-    console.log('loadedMetadata')
-    if (url == null) {
-      console.log('no url')
-      return
-    }
-    const res = await fetch(url).then(res => res.blob())
-    let arrBuf = await res.arrayBuffer()
-    let buf = Buffer.from(arrBuf)
-    parseBuffer(buf, undefined, {includeChapters: true}).then(console.log).catch(console.error)
-    let tags = read(buf)
-    console.dir(tags)
-  }
-
   const logTimes = (s: string) => {
     console.log(`${s}; ${currentTime}, ${audioEl && (audioEl.currentTime || '(N/A)')}, ${new Date()}`)
   }
 
-  onMount(() => {
+  onMount(async () => {
     if (!currentTime) currentTime = 0
     let track = context.createMediaElementSource(audioEl)
-    console.log(gainNode.gain.value)
     track.connect(gainNode).connect(context.destination)
+
+    if (item.relativePath?.endsWith('.mp3')) {
+      chapters = await getMetadata(item, undefined, true)
+    } else {
+      await getMetadata(item, (controller) => {
+        return (update) => {
+          if (update.tag.id === 'chapters')
+            console.log('chapters')
+            console.dir(update)
+            chapters = update.tag.value
+            controller.abort()
+        }
+      })
+    }
+    console.dir(chapters)
 
     window.Buffer = Buffer
     audioEl.preservesPitch = true
@@ -159,7 +158,7 @@
     audioEl.addEventListener('ended', () => { logTimes('ended'); updateMetadata() })
 
     // audioEl.addEventListener('loadeddata', () => logTimes('loadeddata'))
-    audioEl.addEventListener('loadedmetadata', () => { logTimes('loadedmetadata'); loadedMetadata() })
+    // audioEl.addEventListener('loadedmetadata', () => logTimes('loadedmetadata'))
     // audioEl.addEventListener('loadstart', () => logTimes('loadstart'))
 
     audioEl.addEventListener('pause', () => { logTimes('pause'); updateMetadata() })
@@ -220,6 +219,12 @@
       sleepTimerEl.value = 'Sleep timer'
     }, parseInt(minutes) * 60 * 1000)
   }
+
+  $: currentChapter = currentTime && chapters &&
+    chapters.find(val =>
+      val.startTimeMs <= currentTime * 1000 &&
+      val.endTimeMs >= currentTime * 1000
+    )
 </script>
 
 {#if loading}
@@ -239,6 +244,7 @@
       <div class='progressContainer'>
         <div class='times'>
           <div class='currentTime'>{formatTime(currentTime)}</div>
+          <div class='currentChapter'>{currentChapter && (currentChapter.tags && currentChapter.tags?.title || currentChapter.elementID)}</div>
           <div class='duration'>{formatTime(duration)}</div>
         </div>
         <Slider min=0 max={Math.ceil(duration)} bind:value={currentTime} />
