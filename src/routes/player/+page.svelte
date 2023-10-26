@@ -205,7 +205,12 @@
 
   const sleep = () => {
     if (sleepTimer === 'Sleep timer') return
-    if (sleepTimer === 'current chapter') return
+    if (sleepTimer === 'current chapter') {
+      setTimeout(() => {
+        audioEl.pause()
+        sleepTimerEl.value = 'Sleep timer'
+      }, currentChapter.endTimeMs - (currentTime * 1000))
+    }
     if (sleepTimer === 'custom') return
     if (sleepTimer.includes('h')) {
       setTimeout(() => {
