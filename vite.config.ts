@@ -17,4 +17,10 @@ export default defineConfig({
             'node:buffer': 'buffer'
         },
     },
+    optimizeDeps: {
+        exclude: [
+            '@ffmpeg/ffmpeg',
+            '@ffmpeg/util',
+        ],
+    },
 });
