@@ -1,9 +1,11 @@
-import { Buffer } from "buffer"
-import { parseReadableStream } from "music-metadata-browser"
+import { Buffer } from "node:buffer"
+import { parseBuffer, type IAudioMetadata } from 'music-metadata-browser'
 import { library } from "./api"
 import type { Item } from "./types"
-import type { Observer } from "music-metadata/lib/type"
-import { read } from "node-id3"
+import NodeID3, { read } from "node-id3"
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { settings } from './settings'
+import { get } from 'svelte/store'
 
 window.Buffer = Buffer
 
@@ -20,7 +22,92 @@ const formatTime = (n: number) => {
   return parts.join(':')
 }
 
-const getID3Chapters = async (item: Item) => {
+const ffmpeg = new FFmpeg()
+
+const initFFmpeg = async () => {
+  if (ffmpeg.loaded) return;
+  console.log('init ffmpeg')
+
+  await ffmpeg.load({
+    coreURL: `${window.location.origin}/js/ffmpeg-core.js`,
+    wasmURL: `${window.location.origin}/js/ffmpeg-core.wasm`,
+    workerURL: `${window.location.origin}/js/ffmpeg-core.worker.js`,
+  })
+
+}
+
+const getExtension = (s: string) => `.${s.split('.').at(-1)}`
+
+const getMime = (s: string) => {
+  s = getExtension(s)
+  const obj = (mimeType: string) => ({ mimeType })
+  switch (s) {
+    case '.mp3': return obj('audio/mpeg')
+
+    case '.mp4':
+    case '.m4a':
+    case '.m4p':
+    case '.m4b':
+    case '.m4r':
+    case '.m4v':
+      return obj('audio/mp4')
+    default:
+    return obj('') 
+  }
+}
+
+const getID3Metadata = (path: string, data: Uint8Array) => {
+  return read(Buffer.from(data))
+}
+
+const getMP4Metadata = async (path: string, data: Uint8Array) => {
+  return await parseBuffer(data, getMime(path))
+}
+
+type FileData = Uint8Array
+
+interface IFFMetadata {
+  ffmetadata: FileData
+  ffmetadataArtwork: FileData
+}
+
+const getFFMetadata = async (path: string, data: Uint8Array) => {
+  await initFFmpeg()
+
+  const pathParts = path.split('/')
+  const dirs = pathParts.slice(0, -1)
+  const file = pathParts.at(-1)
+  if (!file) return
+
+  const lastDotIndex = file.lastIndexOf('.')!
+  const fileName = file.slice(0, lastDotIndex)
+  // const extension = file.slice(lastDotIndex)
+  const metadataFile = `${dirs.join('/')}${dirs.length ? '/' : ''}${fileName}.metadata`
+
+  console.log('creating dirs')
+  dirs.forEach(async (part, index, arr) => {
+    console.log(`creating ${arr.slice(0, index).join('/')}`)
+    await ffmpeg.createDir(arr.slice(0, index).join('/'))
+  })
+  console.log(`writing file ${file}`)
+  await ffmpeg.writeFile(file, data)
+  console.log('execing')
+  await ffmpeg.exec([
+    '-i', path,
+    '-f', 'ffmetadata',
+    metadataFile,
+  ])
+  console.log(`wrote file ${metadataFile}`)
+
+  console.log(`reading file ${metadataFile}`)
+  const ffmetadata = await ffmpeg.readFile(metadataFile)
+
+  await ffmpeg.exec(`-i ${path} -an -vcodec copy art.png`.split(' '))
+  const ffmetadataArtwork = await ffmpeg.readFile('art.png')
+  return { ffmetadata, ffmetadataArtwork, }
+}
+
+const fetchMP3 = async (item: Item) => {
   if (!item.url) return;
 
   let firstFrame = await fetch(item.url, {
@@ -33,28 +120,113 @@ const getID3Chapters = async (item: Item) => {
   if (maybeID3 !== 'ID3') return
 
   let sizeBuf = await firstFrame.slice(6, 10).arrayBuffer()
-  let sizeView = new Int8Array(sizeBuf)
+  let sizeView = new Uint8Array(sizeBuf)
   let bin = [...sizeView].map(n => n.toString(2).padStart(8, '0').slice(1)).join('')
 
-  let fullID3 = await fetch(item.url, {
+  return fetch(item.url, {
     headers: {
       Range: `bytes=0-${parseInt(bin, 2) + 10}`,
     }
-  }).then(res => res.arrayBuffer())
-
-  let tags = read(Buffer.from(fullID3))
-
-  return tags.chapter
+  }).then(async res => new Uint8Array(await res.arrayBuffer()))
 }
 
-interface ObserverFactory {
-  (controller: AbortController): Observer
+const fetchMP4 = async (item: Item) => {
+  let boxStart = 0
+
+  let boxes: Uint8Array[] = []
+
+  for (let i = 0; i < 10; i++) {
+    // console.log(`iteration ${i}`)
+
+    // console.log(`first fetch for ${boxStart}-${boxStart + 7}`)
+    const boxSize = await fetch(item.url!, {
+      mode: 'cors',
+      headers: {
+        Range: `bytes=${boxStart}-${boxStart + 7}`,
+      },
+    }).then(resp => {
+      if (resp.ok)
+        return resp.arrayBuffer()
+    }).catch(err => {
+      // console.log('in first fetch catch')
+      // console.error(err)
+    })
+
+    if (!boxSize) break
+
+    let sizeView = new DataView(boxSize)
+    let size = sizeView.getUint32(0)
+    let decoder = new TextDecoder()
+    let type = decoder.decode(boxSize.slice(4))
+    // console.log(size, type)
+    // console.log(boxSize.byteLength)
+    // console.log(`pushing arr with size ${boxSize.byteLength}`)
+    boxes.push(new Uint8Array(boxSize))
+    if (type == 'mdat') {
+      if (size > 8) {
+        // console.log(`pushing arr with size ${size - 8}`)
+        boxes.push(new Uint8Array(size - 8))
+      }
+
+      // console.log(`adding ${size} to ${boxStart}`)
+      boxStart += size
+
+      continue
+    }
+
+    if (size <= 8) {
+      boxStart += size
+      continue
+    }
+
+    // console.log(`second fetch for bytes=${boxStart + 8}-${boxStart + size}; ${boxStart}; ${size}`)
+    let boxData = await fetch(item.url!, {
+      mode: 'cors',
+      headers: {
+        Range: `bytes=${boxStart + 8}-${boxStart + size - 1}`,
+      },
+    }).then(resp => {
+      if (resp.ok)
+        return resp.arrayBuffer()
+    })
+
+    if (!boxData) break
+    // console.log(`pushing arr with size ${boxData.byteLength}`)
+    boxes.push(new Uint8Array(boxData))
+
+    // console.log(`adding ${size} to ${boxStart}`)
+    boxStart += size
+  }
+
+  const flatten2DUint8Array = (arrs: Uint8Array[]) => {
+    const length = arrs.reduce((accum, cur) => accum + cur.length, 0)
+    const flatArr = new Uint8Array(length)
+
+    let offset = 0
+    arrs.forEach(arr => {
+      flatArr.set(arr, offset)
+      offset += arr.length
+    })
+
+    return flatArr
+  }
+
+  // console.log('flattening boxes')
+  let flatBoxes = flatten2DUint8Array(boxes)
+
+  // console.log('done flattening')
+
+  return flatBoxes
 }
 
-const getMetadata = async (item: Item, observerFactory?: ObserverFactory, id3Chapter?: boolean) => {
-  const getExtension = (s: string) => `.${s.split('.').at(-1)}`
+const getMetadata = async (item: Item) => {
+  const ffmpegSetting = get(settings).experimental.ffmpeg.opt
 
-  let res
+  // console.log(`ffmpegSetting: ${ffmpegSetting}`)
+
+  if (ffmpegSetting)
+    initFFmpeg()
+
   if (!item.url) {
     item = await library.getContent({
       relativePath: item.relativePath,
@@ -63,31 +235,47 @@ const getMetadata = async (item: Item, observerFactory?: ObserverFactory, id3Cha
     }).then(res => res.content[0])
   }
 
-  if (!item.url) return;
+  if (!item.url) return
 
-  if (id3Chapter) {
-    return await getID3Chapters(item)
+  let mime = getMime(item.relativePath)
+  let fetchFn = mime.mimeType === 'audio/mpeg' ? fetchMP3 : fetchMP4
+
+  const metadataRaw = await fetchFn(item)
+  if (!metadataRaw) {
+    // console.log('no metadataRaw')
+    return
   }
+  // console.log(`raw metadata for ${item.relativePath}`)
+  // console.log(metadataRaw.length)
 
-  if (!observerFactory) return;
+  const getNodeMetadata = mime.mimeType === 'audio/mpeg' ? getID3Metadata : getMP4Metadata
+  const getMetadataFn = ffmpegSetting ? getFFMetadata : getNodeMetadata
 
-  const controller = new AbortController()
-  const signal = controller.signal
+  const metadata = await getMetadataFn(item.relativePath, metadataRaw)
 
-  const observer = observerFactory(controller)
+  if (!metadata) {
+    // console.log('no metadata')
+    return
+  }
+  // console.log(`metadata for ${item.relativePath}`)
 
-  await fetch(item.url, {
-    mode: 'cors',
-    signal,
-  }).then(async resp => {
-    if (!resp.body) return
-
-    await parseReadableStream(resp.body, getExtension(item.originalFileName ?? ''), { includeChapters: true, skipPostHeaders: true, observer })
-    .catch(() => {})
-  })
-  .catch(() => {})
-
-  return res
+  if (ffmpegSetting) {
+    const metaFF: IFFMetadata = metadata as IFFMetadata
+    const metaArr = metaFF.ffmetadata as Uint8Array
+    const d = new TextDecoder()
+    const meta = d.decode(metaArr)
+    return { meta, artwork: metaFF.ffmetadataArtwork, }
+  } else {
+    if (mime.mimeType === 'audio/mpeg') {
+      const meta = metadata as NodeID3.Tags
+      const artwork = meta.image && typeof meta.image !== 'string' ? meta.image.imageBuffer : meta.image
+      return { meta, artwork, }
+    } else {
+      const meta = metadata as IAudioMetadata
+      const artwork = meta.common.picture && meta.common.picture[0].data
+      return { meta: metadata, artwork, }
+    }
+  }
 }
 
 export {

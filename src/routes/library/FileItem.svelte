@@ -6,11 +6,8 @@
   import { formatTime, getMetadata } from '$lib/util'
   import Percent from './Percent.svelte'
   import { settings } from '$lib/settings'
-  import process from 'process'
 
-  window.process = process
-
-  let thumbnail: Buffer | undefined
+  let thumbnail: ArrayBuffer | undefined
   let thumbnailCSS: string | undefined
 
   $: {
@@ -19,14 +16,15 @@
   }
 
   onMount(async () => {
-    await getMetadata(item, (controller) => {
-      return (update) => {
-        if (update.tag.id === 'picture') {
-          thumbnail = update.tag.value.data
-          controller.abort()
-        }
+    try {
+      let metadata = await getMetadata(item)
+      if (metadata !== undefined) {
+        thumbnail = metadata.artwork as Uint8Array
       }
-    })
+      console.log('nothing')
+    } catch (err) {
+      console.error(err)
+    }
   })
 
   const emitEvent = (e: MouseEvent) => {

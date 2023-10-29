@@ -8,10 +8,11 @@
   import { getStore } from '$lib/store'
   import type { Item } from "$lib/types"
   import Overlay from "$lib/components/Overlay.svelte";
-  import { Buffer } from 'buffer'
   import Slider from "./Slider.svelte";
   import { settings } from "$lib/settings";
   import { formatTime, getMetadata } from "$lib/util"
+  import type NodeID3 from "node-id3"
+    import type { IAudioMetadata } from "music-metadata-browser"
 
   // const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
 
@@ -130,24 +131,21 @@
     let track = context.createMediaElementSource(audioEl)
     track.connect(gainNode).connect(context.destination)
 
-    if (item.relativePath?.endsWith('.mp3')) {
-      chapters = await getMetadata(item, undefined, true)
-    } else {
-      await getMetadata(item, (controller) => {
-        return (update) => {
-          if (update.tag.id === 'chapters')
-            console.log('chapters')
-            console.dir(update)
-            chapters = update.tag.value
-            controller.abort()
-        }
-      })
-    }
-    console.dir(chapters)
+    const metadata = await getMetadata(item)
+    if (metadata?.artwork)
+    thumbnail = typeof metadata.artwork === 'string' ?
+      metadata.artwork :
+      URL.createObjectURL(new Blob([metadata.artwork]))
 
-    window.Buffer = Buffer
+    if (item.relativePath?.endsWith('.mp3')) {
+      const meta = metadata?.meta as NodeID3.Tags
+      chapters = meta.chapter
+    } else {
+      const meta = metadata?.meta as IAudioMetadata
+      chapters = meta.format.chapters
+    }
+
     audioEl.preservesPitch = true
-    audioEl.webkitPreservesPitch = true
     // audioEl.addEventListener('audioprocess', () => logTimes('audioprocess'))
     // audioEl.addEventListener('canplay', e => logTimes('canplay'))
     // audioEl.addEventListener('canplaythrough', () => logTimes('canplaythrough'))

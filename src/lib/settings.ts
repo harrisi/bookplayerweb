@@ -42,6 +42,10 @@ interface Settings {
       chapterContext: Setting<boolean>,
     }
   },
+  experimental: {
+    text: string,
+    ffmpeg: Setting<boolean>,
+  },
 }
 
 let _default: Settings = {
@@ -114,6 +118,14 @@ let _default: Settings = {
       },
     },
   },
+  experimental: {
+    text: 'Experimental options',
+    ffmpeg: {
+      opt: false,
+      text: `Use FFmpeg.wasm for parsing file metadata.
+      This may be able to parse chapters for some files better than the default method.`
+    }
+  }
 }
 
 const settingsStr = `settings-${version}`

@@ -116,6 +116,17 @@
         <input type='checkbox' bind:checked={$settings.privacy.disableCrashReports.opt} />
       </li>
     </label>
+
+  <hr />
+  <h2>{$settings.experimental.text}</h2>
+    <label>
+      <li>
+        <p>
+          {$settings.experimental.ffmpeg.text}
+        </p>
+        <input type='checkbox' bind:checked={$settings.experimental.ffmpeg.opt} />
+      </li>
+    </label>
   </ul>
 
   <div id='cacheInfo'>
