@@ -47,6 +47,7 @@
     background: none;
     user-select: none;
     -webkit-user-select: none;
+    color: var(--primary);
   }
 
   input[type=text]:focus {
