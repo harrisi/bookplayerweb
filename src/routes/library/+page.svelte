@@ -2,7 +2,8 @@
   import { library } from '$lib/api'
   import FolderItem from './FolderItem.svelte'
   import FileItem from './FileItem.svelte'
-  import Player from '../player/+page.svelte'
+  import VolumeItem from './VolumeItem.svelte'
+  import Player from '../player/Player.svelte'
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment'
   import { ItemType, type Item } from '$lib/types'
@@ -33,18 +34,22 @@
     items = resp
   }
 
-  const setPlayer = async (item: {relativePath: string}) => {
-    // if an update was made by the player, we need to refetch it. if not, this will just hit the cache
-    // there are better ways to do this.
-    const resp = await library.getContent({relativePath: item.relativePath, sign: true})
-    .then(res => res.content[0])
-    item = resp
-    // await sync(item.relativePath)
-    const audio = document.querySelector('audio')
-    if (audio) {
-      audio.src = ''
-      audio.load()
+  const volumeClick = async (item: Item) => {
+    setPlayer(item)
+  }
+
+  const fileClick = async (item: Item) => {
+    const withURL: Item[] = await library.getContent({
+      relativePath: item.relativePath,
+      sign: true,
+    }).then(res => res.content)
+    if (withURL.length !== 1) {
+      throw new Error(`file click tried loading more than one file for ${item}`)
     }
+    setPlayer(withURL[0])
+  }
+
+  const setPlayer = (item: Item) => {
     player = item
   }
 </script>
@@ -54,23 +59,29 @@ loading..
 {:then _}
 <div class='library'>
   <button id='home' on:click={loadRoot}>home</button>
+
   {#key items.toString()}
   <Grid bind:items>
   {#each items.toSorted((a, b) =>
     (a.orderRank ?? 0) - (b.orderRank ?? 0)
   ) as item, i (item.relativePath)}
-    {#if item.type !== ItemType.File}
-      <button id={i.toString()} draggable="true" in:fade|global on:click={() => folderClick(item.title ?? '')}>
-        <FolderItem {item}></FolderItem>
+    {#if item.type === ItemType.Folder}
+      <button id={i.toString()} draggable="false" in:fade|global on:click={() => folderClick(item.title ?? '')}>
+        <FolderItem {item} />
+      </button>
+    {:else if item.type === ItemType.Volume}
+      <button id={i.toString()} draggable="false" in:fade|global on:click={() => volumeClick(item)}>
+        <VolumeItem {item} />
       </button>
     {:else if item.type === ItemType.File}
-      <button id={i.toString()} draggable="true" in:fade|global on:click={() => setPlayer(item)}>
-        <FileItem {item}></FileItem>
+      <button id={i.toString()} draggable="false" in:fade|global on:click={() => fileClick(item)}>
+        <FileItem {item} />
       </button>
     {/if}
   {/each}
   </Grid>
   {/key}
+
 </div>
 {:catch err}
   {err}

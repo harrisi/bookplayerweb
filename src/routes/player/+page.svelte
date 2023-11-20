@@ -3,20 +3,21 @@
 </script>
 
 <script lang='ts'>
-  import { onDestroy, onMount } from "svelte";
-  import { library } from "$lib/api";
+  import { onDestroy, onMount } from "svelte"
+  import { library } from "$lib/api"
   import { getStore } from '$lib/store'
-  import type { Item } from "$lib/types"
-  import Overlay from "$lib/components/Overlay.svelte";
-  import Slider from "./Slider.svelte";
-  import { settings } from "$lib/settings";
+  import { ItemType, type Item } from "$lib/types"
+  import Overlay from "$lib/components/Overlay.svelte"
+  import Slider from "./Slider.svelte"
+  import { settings } from "$lib/settings"
   import { formatTime, getMetadata } from "$lib/util"
   import type NodeID3 from "node-id3"
-    import type { IAudioMetadata } from "music-metadata-browser"
+  import type { IAudioMetadata } from "music-metadata-browser"
+  import { audioEvents } from "$lib/consts"
 
-  // const worker = new Worker(new URL('./worker.ts', import.meta.url), {type: 'module'})
-
+  // this will be either a volume or individual file
   export let item: Item
+  // either way, we get all the data here
   let {
     relativePath,
     originalFileName,
@@ -33,61 +34,65 @@
     url,
     thumbnail,
     synced,
-    expires_in,
   } = item
 
-  let loading = false
+  let mounted = false
+
+  /**
+   * Used to keep track of when the last metadata was sent, so we don't send updates too often.
+   */
   let lastUpdate: number | undefined
+
+  /**
+   * percentCompleted store for the item, so we can update the progress in the grid view
+   */
   let store = getStore(relativePath, percentCompleted)
+
+  /**
+   * Is the file playable, used for enabling/disabling play on click
+   */
   let playable = false
-  let audioEl: HTMLAudioElement
-  let sleepTimer: string
-  let sleepTimerEl: HTMLSelectElement
-  let metadata: any | undefined
-  let chapters: any[] | undefined
+
   let playing = false
-  // const captureStream: MediaStream
-  const contextOpts: AudioContextOptions = {
-    latencyHint: 'playback', // 'balanced', 'interactive' (default), 'playback'
-  }
-  const context = new AudioContext()
-  const gainNode = context.createGain()
-  gainNode.gain.value = $settings.playback.boostVolume.opt ? 2 : 1
 
-  // worker.postMessage({ relativePath })
-  // worker.addEventListener('message', ({ data }) => {
-  //   if (data.length === 0) {
-  //     loading = true
-  //     setTimeout(() => {
-  //       worker.postMessage({ relativePath })
-  //     }, 500)
-  //     return
-  //   }
-  //   loading = false
-  //   // I don't believe this will throw, so just blindly revoke whatever to save memory
-  //   try {
-  //     URL.revokeObjectURL(url ?? '')
-  //   } catch (err) {
-  //     console.error(err)
-  //   }
-  //   url = data
-  //   try {
-  //     if (audioEl == null)
-  //       throw new Error('could not find audio element')
-  //     audioEl.src = url ?? ''
-  //     aduioEl.play().then(() => console.log('played')).catch(console.error)
-  //   } catch (err) {
-  //     console.error('got err in player')
-  //     console.error(err)
-  //   }
-  // })
+  /**
+   * Reference to the audio element for the currently playing item.
+   * For volumes this is a reference to whichever file is currently playing.
+   */
+  // let audioEl: HTMLAudioElement
 
-  const updateMetadata = () => {
+  /**
+   * An array of all the current audio elements.
+   */
+  let audioEls: HTMLAudioElement[] = []
+
+  /**
+   * Holds the value of sleepTimerEl. This isn't strictly necessary but it's helpful.
+   */
+  let sleepTimer: string
+
+  /**
+   * Sleep timer html element.
+   */
+  let sleepTimerEl: HTMLSelectElement
+
+  /**
+   * Chapters. I need to define a representation for all the different libraries to make this more useful.
+   */
+  let chapters: any[] = []
+
+  let currentItems: {start: number, end: number, item: Item}[] = []
+
+  let currentItemIndex = 0
+
+  // $: currentItem = currentItems[currentItemIndex]
+
+  const updateMetadata = async () => {
     // don't update more than once every 10s
     if (lastUpdate && Date.now() - lastUpdate < 10000) return
     lastUpdate = Date.now()
     console.log(relativePath)
-    library.updateMetadata({
+    await library.updateMetadata({
       relativePath,
       currentTime,
       percentCompleted: (currentTime / duration) * 100,
@@ -103,80 +108,114 @@
     updateMetadata()
   })
 
-  const saveNode = () => {
-    const ac = new AudioContext()
-    if (audioEl == null) throw new Error('Could not find audio element')
-    const sourceNode = ac.createMediaElementSource(audioEl)
+  // const canplay = (e: Event) => {
+  //   console.log('canplay')
+  //   let { target } = e
+  //   const a = target as HTMLAudioElement
+  //   if ((Math.abs(a.currentTime - currentTime) > 1)) {
+  //     a.currentTime = currentTime
+  //   }
+  //   if (playable && userInteracted) {
+  //     a.play()
+  //     a.removeEventListener('canplay', canplay)
+  //     a.addEventListener('play', canplay)
+  //   }
+  // }
+
+  const logTimes = (s: string, n = currentItemIndex) => {
+    console.log(`${s}; currentTime: ${currentTime}, audioEls[${n}].currentTime: ${audioEls[n] && (audioEls[n].currentTime || '(N/A)')}, new Date(): ${new Date()}`)
   }
 
-  const canplay = (e: Event) => {
-    let { target } = e
-    const a = target as HTMLAudioElement
-    if ((Math.abs(a.currentTime - currentTime) > 1)) {
-      a.currentTime = currentTime
+  const ended = async () => {
+    // currentItemIndex++;
+    if (Math.abs(currentTime - currentItems[currentItems.length - 1].end) > 1) {
+      currentTime += 0.1
     }
-    if (playable && userInteracted) {
-      a.play()
-      a.removeEventListener('canplay', canplay)
-      a.addEventListener('play', canplay)
-    }
   }
 
-  const logTimes = (s: string) => {
-    console.log(`${s}; ${currentTime}, ${audioEl && (audioEl.currentTime || '(N/A)')}, ${new Date()}`)
-  }
+  // const setPlayer = async (item: Item) => {
+  //   console.log('setting player')
+  //   if (!item.url) return;
+  //   // audioEls[currentItemIndex].src = item.url.toString()
+  //   // audioEls[currentItemIndex].load()
+  //   await audioEls[currentItemIndex].play().then(console.log).catch(err => {
+  //     console.error(err)
+  //   })
+  // }
 
-  onMount(async () => {
+  const setupPlayer = async () => {
+    console.log('player onMount')
+    // handle items that have never been played.
     if (!currentTime) currentTime = 0
-    let track = context.createMediaElementSource(audioEl)
-    track.connect(gainNode).connect(context.destination)
 
-    const metadata = await getMetadata(item)
-    if (metadata?.artwork)
-    thumbnail = typeof metadata.artwork === 'string' ?
-      metadata.artwork :
-      URL.createObjectURL(new Blob([metadata.artwork]))
+    if (type === ItemType.File) {
+      audioEls.push(new Audio())
+      // audioEls[0].crossOrigin = 'anonymous'
+      // console.log(item.url?.toString() ?? 'nothing')
+      currentItems.push({start: 0, end: duration, item})
+      currentItemIndex = 0
+      const metadata = await getMetadata(item)
+      if (metadata?.artwork)
+      thumbnail = typeof metadata.artwork === 'string' ?
+        metadata.artwork :
+        URL.createObjectURL(new Blob([metadata.artwork]))
 
-    if (item.relativePath?.endsWith('.mp3')) {
-      const meta = metadata?.meta as NodeID3.Tags
-      chapters = meta.chapter
-    } else {
-      const meta = metadata?.meta as IAudioMetadata
-      chapters = meta.format.chapters
+      if (item.relativePath?.endsWith('.mp3')) {
+        const meta = metadata?.meta as NodeID3.Tags
+        chapters = meta.chapter ?? []
+      } else {
+        const meta = metadata?.meta as IAudioMetadata
+        chapters = meta.format.chapters ?? []
+      }
+    } else if (type === ItemType.Volume) {
+      console.log('setting up volume')
+
+      // find which file we're in
+      let volumeChildren: Item[] = await library.getContent({
+        relativePath: `${item.relativePath}/`,
+        sign: true,
+      }).then(res => res.content)
+
+      volumeChildren.sort((a, b) => (a.orderRank ?? 0) - (b.orderRank ?? 0))
+
+      let prevDurations = 0
+      let found = false
+
+      for (let [index, item] of volumeChildren.entries()) {
+        let { duration = 0 } = item
+
+        // if the duration of the current item plus the previous items' durations
+        // is greater than or equal to currentTime, the current item holds the correct
+        // time, so set this as the start.
+
+        currentItems.push({start: prevDurations, end: prevDurations + duration, item})
+        const audio = new Audio()
+        // audio.crossOrigin = 'anonymous'
+        // audio.src = item.url?.toString() ?? ''
+        // audio.preload = ''
+        audioEls.push(audio)
+        console.log(`pushing {elementID: '${item.title}', startTimeMs: ${prevDurations * 1000}, endTimeMs: ${(prevDurations + duration) * 1000}} to chapters`)
+        chapters.push({
+          elementID: item.title,
+          startTimeMs: prevDurations * 1000,
+          endTimeMs: (prevDurations + duration) * 1000,
+        })
+
+        if ((duration + prevDurations) >= currentTime) {
+          if (!found) {
+            found = true
+            currentItemIndex = index
+            // audio.currentTime = currentTime - prevDurations
+          }
+        }
+        prevDurations += duration
+      }
     }
 
-    audioEl.preservesPitch = true
-    // audioEl.addEventListener('audioprocess', () => logTimes('audioprocess'))
-    // audioEl.addEventListener('canplay', e => logTimes('canplay'))
-    // audioEl.addEventListener('canplaythrough', () => logTimes('canplaythrough'))
-    // audioEl.addEventListener('complete', () => logTimes('complete'))
-    // audioEl.addEventListener('durationchange', () => logTimes('durationchange'))
-    // audioEl.addEventListener('emptied', () => logTimes('emptied'))
+    // if (userInteracted) {
+    //   audioEls[currentItemIndex].play().then(() => playable = true).catch(() => playable = false)
+    // }
 
-    audioEl.addEventListener('ended', () => { logTimes('ended'); updateMetadata() })
-
-    // audioEl.addEventListener('loadeddata', () => logTimes('loadeddata'))
-    // audioEl.addEventListener('loadedmetadata', () => logTimes('loadedmetadata'))
-    // audioEl.addEventListener('loadstart', () => logTimes('loadstart'))
-
-    audioEl.addEventListener('pause', () => { logTimes('pause'); updateMetadata() })
-
-    // audioEl.addEventListener('play', () => logTimes('play'))
-    // audioEl.addEventListener('playing', () => logTimes('playing'))
-    // audioEl.addEventListener('ratechange', () => logTimes('ratechange'))
-    // audioEl.addEventListener('seeked', () => logTimes('seeked'))
-    // audioEl.addEventListener('seeking', () => logTimes('seeking'))
-    // audioEl.addEventListener('stalled', () => logTimes('stalled'))
-    // audioEl.addEventListener('suspend', () => logTimes('suspend'))
-
-    audioEl.addEventListener('timeupdate', () => { logTimes('timeupdate'); $store = (audioEl.currentTime / audioEl.duration) * 100 })
-
-    // audioEl.addEventListener('volumechange', () => logTimes('volumechange'))
-    // audioEl.addEventListener('waiting', () => logTimes('waiting'))
-
-    if (userInteracted) {
-      audioEl.play().then(() => playable = true).catch(() => playable = false)
-    }
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title,
@@ -185,54 +224,162 @@
         artwork: [{ src: thumbnail?.toString() ?? '' }],
       })
     }
-  })
 
-  const playPause = () => {
-    if (context.state === 'suspended') context.resume()
-    if (!userInteracted) userInteracted = true
-    if (audioEl.paused) {
-      audioEl.play()
-    } else {
-      audioEl.pause()
-    }
+    mounted = true
+
   }
 
+  onMount(setupPlayer)
+
+  const setListeners = () => {
+    // console.log('setting listeners')
+    audioEls.forEach((audioEl, index) => {
+      // console.log(audioEl)
+      audioEl.preservesPitch = true
+
+      // audioEvents.forEach(ev => {
+      //   // console.log(ev)
+      //   if (!['ended', 'paused', 'play', 'playing', 'timeupdate'].includes(ev))
+      //     audioEl.addEventListener(ev, () => logTimes(ev, index))
+      // })
+      // console.log('the rest')
+
+      // audioEl.addEventListener('canplay', canplay)
+      audioEl.addEventListener('ended', async () => { logTimes('ended', index); await updateMetadata(); ended() })
+      audioEl.addEventListener('pause', () => { logTimes('pause', index); playing = false; updateMetadata() })
+      // audioEl.addEventListener('playing', () => playing = true)
+      audioEl.addEventListener('play', () => playing = true)
+      audioEl.addEventListener('timeupdate', () => {
+        if (!changing && currentItemIndex == index) {
+          currentTime = currentItems[index].start + audioEl.currentTime
+          $store = (currentTime / duration) * 100
+        }
+        changing = false
+      })
+    })
+  }
+
+  $: {
+    audioEls = audioEls
+    setListeners()
+  }
+
+  const playPause = async () => {
+    console.log(`playPause, playing: ${playing}`)
+    // if (context.state === 'suspended') context.resume()
+    if (!userInteracted) userInteracted = true
+    if (playing) {
+      // console.log('pausing')
+      // console.dir(audioEls[currentItemIndex])
+      audioEls.forEach(audioEl => audioEl.pause())
+    } else {
+      // audioEls.forEach((audioEl, index) => index !== currentItemIndex && audioEl.pause())
+      // console.log('playing')
+      // console.dir(audioEls[currentItemIndex])
+      audioEls[currentItemIndex].play().then(console.log).catch(console.error)
+    }
+    playing = !playing
+  }
+
+  // this should set the overall time since other things map the current time to which item is playing
   const skip = (time: number) => {
-    audioEl.currentTime += time
+    changing = true
+
+    currentTime += time
   }
 
   const sleep = () => {
     if (sleepTimer === 'Sleep timer') return
     if (sleepTimer === 'current chapter') {
       setTimeout(() => {
-        audioEl.pause()
+        audioEls[currentItemIndex].pause()
         sleepTimerEl.value = 'Sleep timer'
       }, currentChapter.endTimeMs - (currentTime * 1000))
     }
-    if (sleepTimer === 'custom') return
+    if (sleepTimer === 'custom') {
+      return
+    }
     if (sleepTimer.includes('h')) {
       setTimeout(() => {
-        audioEl.pause()
+        // this won't work if the item is the next item.
+        audioEls[currentItemIndex].pause()
         sleepTimerEl.value = 'Sleep timer'
       }, 1 * 60 * 60 * 1000)
     }
     let minutes = sleepTimer.match(/\d+/)?.at(0)!
     setTimeout(() => {
-      audioEl.pause()
+      audioEls[currentItemIndex].pause()
       sleepTimerEl.value = 'Sleep timer'
     }, parseInt(minutes) * 60 * 1000)
   }
 
-  $: currentChapter = currentTime && chapters && chapters.find &&
-    chapters.find(val =>
-      val.startTimeMs <= currentTime * 1000 &&
-      val.endTimeMs >= currentTime * 1000
-    )
-</script>
+  let currentChapter = {}
 
-{#if loading}
-<h1>LOADING...</h1>
-{/if}
+  $: {
+    console.log('currentItemIndex')
+    // Determine which audio file should be playing based on currentTime
+    let targetIndex = currentItems.findIndex(item => 
+      currentTime >= item.start && currentTime < item.end
+    );
+
+    if (targetIndex !== -1 && targetIndex !== currentItemIndex) {
+      changing = true
+      // Switching to a new audio file
+      audioEls[currentItemIndex].pause();
+      currentItemIndex = targetIndex;
+      let adjustedCurrentTime = currentTime - currentItems[currentItemIndex].start;
+      audioEls[currentItemIndex].currentTime = adjustedCurrentTime;
+      if (playing) {
+        audioEls[currentItemIndex].play().catch(console.error);
+      }
+    } else if (targetIndex === currentItemIndex) {
+      changing = true
+      // Adjust currentTime within the current audio element
+      let adjustedCurrentTime = currentTime - currentItems[currentItemIndex].start;
+      if (Math.abs(audioEls[currentItemIndex].currentTime - adjustedCurrentTime) > 0.1) {
+        audioEls[currentItemIndex].currentTime = adjustedCurrentTime;
+      }
+    }
+  }
+
+  $: {
+    console.log('currentChapter');
+    // Update current chapter based on currentTime
+    currentChapter = chapters.find(chapter => 
+      chapter.startTimeMs <= currentTime * 1000 && chapter.endTimeMs >= currentTime * 1000
+    );
+  }
+
+  let changing = false
+
+  // let files = [
+  //   { url: "track1.mp3", duration: 120 }, // Duration in seconds
+  //   { url: "track2.mp3", duration: 150 },
+  //   // ... more files
+  // ];
+  // let totalDuration = files.reduce((sum, file) => sum + file.duration, 0);
+
+  // function onSliderChange(position) {
+  //   let time = (position / 100) * totalDuration; // Assuming slider position is a percentage
+  //   let { fileUrl, fileTime } = getFileAndTime(time);
+  //   audioElement.src = fileUrl;
+  //   audioElement.currentTime = fileTime;
+  //   audioElement.play();
+  // }
+
+  // function getFileAndTime(time) {
+  //   let cumulativeTime = 0;
+  //   for (let file of files) {
+  //     if (time < cumulativeTime + file.duration) {
+  //       return { fileUrl: file.url, fileTime: time - cumulativeTime };
+  //     }
+  //     cumulativeTime += file.duration;
+  //   }
+  //   return { fileUrl: null, fileTime: 0 }; // Default case
+  // }
+
+
+</script>
 
 <Overlay --bottom='5px'>
   <div id='player'>
@@ -247,10 +394,10 @@
       <div class='progressContainer'>
         <div class='times'>
           <div class='currentTime'>{formatTime(currentTime)}</div>
-          <div class='currentChapter'>{(currentChapter && (currentChapter.tags && currentChapter.tags?.title || currentChapter.elementID)) ?? ''}</div>
+          <div class='currentChapter'>{(currentChapter && ((currentChapter.tags && currentChapter.tags?.title) || currentChapter.elementID)) ?? ''}</div>
           <div class='duration'>{formatTime(duration)}</div>
         </div>
-        <Slider min=0 max={Math.ceil(duration)} bind:value={currentTime} />
+        <Slider min=0 max={Math.ceil(duration)} bind:value={currentTime} bind:changing />
       </div>
     </div>
 
@@ -259,7 +406,7 @@
       <!-- svelte-ignore a11y-label-has-associated-control -->
       <label id='speed'>
         {speed}
-        <Slider min='0.5' max=4 step='0.1' bind:value={speed} on:change={() => audioEl.playbackRate = speed} />
+        <Slider min='0.5' max=4 step='0.1' bind:value={speed} on:change={() => audioEls[currentItemIndex].playbackRate = speed} />
       </label>
 
       <button on:click={() => skip(-$settings.playback.skipIntervals.rewind.opt)}>
@@ -272,7 +419,7 @@
       </button>
 
       <button on:click={playPause} id='playPause'>
-        {#if (audioEl && audioEl.paused)}
+        {#if (!playing)}
           <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512">
           <!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
             <path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/>
@@ -340,10 +487,6 @@
     align-items: center;
   }
 
-  #progress {
-    width: 100%;
-  }
-
   #right {
     display: flex;
     justify-content: space-evenly;
@@ -380,6 +523,19 @@
   }
 </style>
 
-<audio crossorigin="anonymous" bind:this={audioEl} bind:playbackRate={speed} src={url?.toString()} bind:currentTime on:canplay={canplay}>
-  <!-- <source src={url} type="audio/mp3"> -->
-</audio>
+{#if mounted}
+{#each currentItems as curItem, i}
+  <audio
+    crossorigin=anonymous
+    src={curItem.item.url?.toString() ?? ''}
+    bind:this={audioEls[i]}
+    bind:playbackRate={speed}
+  >
+  </audio>
+{/each}
+{/if}
+    <!-- on:canplay={canplay} -->
+    <!-- bind:currentTime={currentTimes[i]} -->
+
+<!-- <audio crossorigin="anonymous" bind:this={audioEl} bind:playbackRate={speed} bind:currentTime on:canplay={canplay}>
+</audio> -->
