@@ -4,6 +4,17 @@ import type { Bookmark, Item } from './types'
 
 const root = dev ? 'http://localhost:5003/v1' : 'https://api.tortugapower.com/v1'
 
+const thenResp = (resp: Response) => {
+  if (resp.ok) {
+    return resp.json()
+  }
+  else {
+    console.log(`fetch failed:`)
+    console.dir(resp)
+    return resp.status
+  }
+}
+
 const raw = async (method: HttpMethod, path: string, body?: BodyInit | object | null, keepalive?: boolean) => {
   const token = browser ? localStorage.getItem('token') : ''
   let headers = new Headers()
@@ -24,15 +35,15 @@ const raw = async (method: HttpMethod, path: string, body?: BodyInit | object | 
     opts.keepalive = true
   }
   headers.append('If-Modified-Since', new Date().toISOString())
-  const f = await fetch(`${root}${path}`, opts).then(resp => resp.json())
-  .catch(console.error)
-  // .catch(err => console.error(err))
+  const f = await fetch(`${root}${path}`, opts)
+    .then(thenResp)
+    .catch(console.error)
 
   return f
 }
 
 const apiCall = Object.freeze({
-  get: async (path: string, keepalive?: boolean) => {
+  get: (path: string, keepalive?: boolean) => {
     return raw('GET', path, null, keepalive)
   },
 
@@ -52,28 +63,28 @@ const apiCall = Object.freeze({
 const library = Object.freeze({
   getContent: async ({relativePath, sign, noLastItemPlayed}: {relativePath?: string, sign?: boolean, noLastItemPlayed?: boolean}, keepalive?: boolean) => {
     let path = '/library'
-    let inCache: string | null | undefined
+    // let inCache: string | null | undefined
     let params = []
-    const getDate = (c: string) => Date.parse(`${c.substring(0, 4)}-${c.substring(4,6)}-${c.substring(6,11)}:${c.substring(11,13)}:${c.substring(13)}`) / 1000
-    const expired = (e: string) => {
-      let url = new URL(e)
-      let createdAt = url.searchParams.get('X-Amz-Date')
-      let expiresIn = url.searchParams.get('X-Amz-Expires')
-      if (!createdAt || !expiresIn) return true
-      return (getDate(createdAt) + parseInt(expiresIn)) >= (Date.now() / 1000) + 30
-    }
+    // const getDate = (c: string) => Date.parse(`${c.substring(0, 4)}-${c.substring(4,6)}-${c.substring(6,11)}:${c.substring(11,13)}:${c.substring(13)}`) / 1000
+    // const expired = (e: string) => {
+    //   let url = new URL(e)
+    //   let createdAt = url.searchParams.get('X-Amz-Date')
+    //   let expiresIn = url.searchParams.get('X-Amz-Expires')
+    //   if (!createdAt || !expiresIn) return true
+    //   return (getDate(createdAt) + parseInt(expiresIn)) >= (Date.now() / 1000) + 30
+    // }
 
     if (relativePath) params.push(`relativePath=${encodeURIComponent(relativePath)}`)
     // we want the url
     if (sign) {
-      inCache = localStorage.getItem(`relativePath=${relativePath ?? '/'}`)
-      if (!inCache) {
+      // inCache = localStorage.getItem(`relativePath=${relativePath ?? '/'}`)
+      // if (!inCache) {
         params.push(`sign=${encodeURIComponent(sign)}`)
-      } else {
-        if (expired(inCache)) {
+      // } else {
+        // if (expired(inCache)) {
           params.push(`sign=${encodeURIComponent(sign)}`)
-        }
-      }
+        // }
+      // }
     }
     if (noLastItemPlayed != undefined) params.push(`noLastItemPlayed=${encodeURIComponent(noLastItemPlayed)}`)
 
@@ -88,20 +99,20 @@ const library = Object.freeze({
       console.log('getContent try')
       console.error(err)
     }
-    let i = 0
-    for (let item of res.content) {
-      // this will happen if sign=true and the url isn't expired
-      if (item.url) {
-        localStorage.setItem(`relativePath=${item.relativePath ?? '/'}`, item.url)
-      } else {
-        // but if we passed sign, we still want to add the url from cache.
-        if (sign) {
-          const itemInCache = localStorage.getItem(`relativePath=${item.relativePath ?? '/'}`)
-          res.content[i].url = itemInCache
-        }
-      }
-      i++
-    }
+    // let i = 0
+    // for (let item of res.content) {
+    //   // this will happen if sign=true and the url isn't expired
+    //   if (item.url) {
+    //     localStorage.setItem(`relativePath=${item.relativePath ?? '/'}`, item.url)
+    //   } else {
+    //     // but if we passed sign, we still want to add the url from cache.
+    //     if (sign) {
+    //       const itemInCache = localStorage.getItem(`relativePath=${item.relativePath ?? '/'}`)
+    //       res.content[i].url = itemInCache
+    //     }
+    //   }
+    //   i++
+    // }
     return res
   },
 
@@ -163,8 +174,8 @@ const library = Object.freeze({
     return await apiCall.put('/library/bookmark', { key, ...bookmark }, keepalive)
   },
 
-  getLastPlayed: async (keepalive?: boolean) => {
-    return await apiCall.get('/library/last_played', keepalive).then(res => res.lastItemPlayed)
+  getLastPlayed: async (sign = true, keepalive?: boolean) => {
+    return await apiCall.get(`/library/last_played${sign ? '?sign=true' : ''}`, keepalive).then(res => res.lastItemPlayed)
   },
 })
 
