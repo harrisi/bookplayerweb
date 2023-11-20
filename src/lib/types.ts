@@ -69,12 +69,10 @@ export type Item = {
   speed?: number,
   /**
    * Whether item is synced or not. I'm not sure when this will be false?
+   * I think only between the time of creating an item in the api and uploading the file to s3
+   * I think with the storage changes this may change.
    */
   synced?: boolean,
-  /**
-   * ???
-   */
-  expires_in?: number,
 }
 
 export type Bookmark = {
