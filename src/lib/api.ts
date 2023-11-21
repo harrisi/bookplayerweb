@@ -34,7 +34,7 @@ const raw = async (method: HttpMethod, path: string, body?: BodyInit | object | 
   if (keepalive) {
     opts.keepalive = true
   }
-  headers.append('If-Modified-Since', new Date().toISOString())
+  headers.append('If-Modified-Since', new Date().toUTCString())
   const f = await fetch(`${root}${path}`, opts)
     .then(thenResp)
     .catch(console.error)
