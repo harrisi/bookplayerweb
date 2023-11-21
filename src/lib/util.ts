@@ -81,7 +81,6 @@ const getFFMetadata = async (path: string, data: Uint8Array) => {
 
   const lastDotIndex = file.lastIndexOf('.')!
   const fileName = file.slice(0, lastDotIndex)
-  // const extension = file.slice(lastDotIndex)
   const metadataFile = `${dirs.join('/')}${dirs.length ? '/' : ''}${fileName}.metadata`
 
   console.log('creating dirs')
@@ -111,6 +110,7 @@ const fetchMP3 = async (item: Item) => {
   if (!item.url) return;
 
   let firstFrame = await fetch(item.url, {
+    mode: 'cors',
     headers: {
       Range: 'bytes=0-9',
     },
@@ -124,6 +124,7 @@ const fetchMP3 = async (item: Item) => {
   let bin = [...sizeView].map(n => n.toString(2).padStart(8, '0').slice(1)).join('')
 
   return fetch(item.url, {
+    mode: 'cors',
     headers: {
       Range: `bytes=0-${parseInt(bin, 2) + 10}`,
     }
@@ -136,9 +137,6 @@ const fetchMP4 = async (item: Item) => {
   let boxes: Uint8Array[] = []
 
   for (let i = 0; i < 10; i++) {
-    // console.log(`iteration ${i}`)
-
-    // console.log(`first fetch for ${boxStart}-${boxStart + 7}`)
     const boxSize = await fetch(item.url!, {
       mode: 'cors',
       headers: {
@@ -147,10 +145,7 @@ const fetchMP4 = async (item: Item) => {
     }).then(resp => {
       if (resp.ok)
         return resp.arrayBuffer()
-    }).catch(err => {
-      // console.log('in first fetch catch')
-      // console.error(err)
-    })
+    }).catch(console.error)
 
     if (!boxSize) break
 
@@ -158,17 +153,12 @@ const fetchMP4 = async (item: Item) => {
     let size = sizeView.getUint32(0)
     let decoder = new TextDecoder()
     let type = decoder.decode(boxSize.slice(4))
-    // console.log(size, type)
-    // console.log(boxSize.byteLength)
-    // console.log(`pushing arr with size ${boxSize.byteLength}`)
     boxes.push(new Uint8Array(boxSize))
     if (type == 'mdat') {
       if (size > 8) {
-        // console.log(`pushing arr with size ${size - 8}`)
         boxes.push(new Uint8Array(size - 8))
       }
 
-      // console.log(`adding ${size} to ${boxStart}`)
       boxStart += size
 
       continue
@@ -179,7 +169,6 @@ const fetchMP4 = async (item: Item) => {
       continue
     }
 
-    // console.log(`second fetch for bytes=${boxStart + 8}-${boxStart + size}; ${boxStart}; ${size}`)
     let boxData = await fetch(item.url!, {
       mode: 'cors',
       headers: {
@@ -191,10 +180,8 @@ const fetchMP4 = async (item: Item) => {
     })
 
     if (!boxData) break
-    // console.log(`pushing arr with size ${boxData.byteLength}`)
     boxes.push(new Uint8Array(boxData))
 
-    // console.log(`adding ${size} to ${boxStart}`)
     boxStart += size
   }
 
@@ -211,18 +198,13 @@ const fetchMP4 = async (item: Item) => {
     return flatArr
   }
 
-  // console.log('flattening boxes')
   let flatBoxes = flatten2DUint8Array(boxes)
-
-  // console.log('done flattening')
 
   return flatBoxes
 }
 
 const getMetadata = async (item: Item) => {
   const ffmpegSetting = get(settings).experimental.ffmpeg.opt
-
-  // console.log(`ffmpegSetting: ${ffmpegSetting}`)
 
   if (ffmpegSetting)
     initFFmpeg()
@@ -241,23 +223,14 @@ const getMetadata = async (item: Item) => {
   let fetchFn = mime.mimeType === 'audio/mpeg' ? fetchMP3 : fetchMP4
 
   const metadataRaw = await fetchFn(item)
-  if (!metadataRaw) {
-    // console.log('no metadataRaw')
-    return
-  }
-  // console.log(`raw metadata for ${item.relativePath}`)
-  // console.log(metadataRaw.length)
+  if (!metadataRaw) return;
 
   const getNodeMetadata = mime.mimeType === 'audio/mpeg' ? getID3Metadata : getMP4Metadata
   const getMetadataFn = ffmpegSetting ? getFFMetadata : getNodeMetadata
 
   const metadata = await getMetadataFn(item.relativePath, metadataRaw)
 
-  if (!metadata) {
-    // console.log('no metadata')
-    return
-  }
-  // console.log(`metadata for ${item.relativePath}`)
+  if (!metadata) return;
 
   if (ffmpegSetting) {
     const metaFF: IFFMetadata = metadata as IFFMetadata

@@ -27,8 +27,8 @@
 
 <div id='betaHeader'>
   <p>
-    This is beta software. Please <a href='https://github.com/TortugaPower/bookplayerweb/issues' target='_blank'>file issues on GitHub</a>,
-    or <a href={`mailto:support@bookplayer.app?subject=${encodeURIComponent('BookPlayer web support')}`}>send an email to support@bookplayer.app</a>.
+    This is beta software. Please <a class='betaLink' href='https://github.com/TortugaPower/bookplayerweb/issues' target='_blank'>file issues on GitHub</a>,
+    or <a class='betaLink' href={`mailto:support@bookplayer.app?subject=${encodeURIComponent('BookPlayer web support')}`}>send an email to support@bookplayer.app</a>.
   </p>
   <p>
     Thanks for testing!
@@ -82,13 +82,17 @@
 
 <!-- <Upload /> -->
 
-<div id='container'>
+<div class='container'>
   <slot />
 </div>
 
 <ContextMenu />
 
 <style>
+  a.betaLink {
+    text-decoration: underline;
+  }
+
   a {
     outline: none;
     text-decoration: none;
@@ -126,7 +130,7 @@
     'opsz' 24
   }
 
-  div#container {
+  div.container {
     display: grid;
   }
 
@@ -138,8 +142,6 @@
   a.headerButton {
     display: grid;
     grid-template-rows: 1fr auto;
-    /* border: 1px solid var(--primary);
-    border-radius: 3px; */
     padding: 5px;
     margin: 5px;
     justify-content: space-evenly;
@@ -187,6 +189,7 @@
 
   :global(body) {
     margin: 0;
+    min-height: 100vh;
     background-color: var(--systemBackground);
     color: var(--primary);
   }

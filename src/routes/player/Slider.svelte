@@ -33,6 +33,9 @@
 <input bind:this={el} type='range' {min} {max} {step} bind:value on:change={onChange} />
 
 <style>
+  /* this is a placeholder style, which will be changed. Just wanted to get something consistent across browsers while testing */
+  /* credit: https://www.smashingmagazine.com/2021/12/create-custom-range-input-consistent-browsers */
+
   /*********** Baseline, reset styles ***********/
 input[type="range"] {
   -webkit-appearance: none;

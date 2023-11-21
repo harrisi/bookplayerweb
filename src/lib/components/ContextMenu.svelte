@@ -3,8 +3,6 @@
   import { onDestroy, onMount } from "svelte"
   import type { MouseEventHandler } from 'svelte/elements'
 
-  let currentTarget: EventTarget
-
   let contextMenu: HTMLDivElement
   interface ContextMenuItem {
     text: string,

@@ -20,7 +20,6 @@
       await user.login({id_token})
         .then(resp => {
           console.log(resp)
-          // don't really need this, I don't think, but doesn't hurt.
           localStorage.setItem('email', resp.email)
           localStorage.setItem('token', resp.token)
           goto('/library')
@@ -30,10 +29,8 @@
         })
     })
 
-    // Listen for authorization failures.
     document.addEventListener('AppleIDSignInOnFailure', (event) => {
       console.dir(event)
-      // Handle error.
       console.log('failure')
     })
 
@@ -45,7 +42,7 @@
 <svelte:head>
   <meta name="appleid-signin-client-id" content="com.tortugapower.audiobookplayer.loginservice">
   <meta name="appleid-signin-scope" content="email">
-  <meta name="appleid-signin-redirect-uri" content={dev ? 'https://bp.fofgof.xyz' : (browser && window.location.origin)}>
+  <meta name="appleid-signin-redirect-uri" content={dev ? 'https://bp.fofgof.xyz' : (browser ? window.location.origin : '')}>
   <meta name="appleid-signin-state" content="BookPlayerWeb login">
   <meta name="appleid-signin-use-popup" content="true">
 </svelte:head>
@@ -55,6 +52,3 @@
 <p>This is a web front end for <a href="https://github.com/tortugapower/bookplayer">BookPlayer</a></p>
 
 <div id="appleid-signin" data-color="black" data-border="true" data-type="sign in"></div>
-
-<style>
-</style>

@@ -55,7 +55,7 @@ self.addEventListener('fetch', (event) => {
       // @ts-ignore
       const response = await fetch(event.request)
 
-      if (response.status === 200 && !url.hostname.includes('amazonaws.com')) {
+      if (response.ok) {
         // @ts-ignore
         cache.put(event.request, response.clone())
       }

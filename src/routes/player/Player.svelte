@@ -14,9 +14,7 @@
   import type NodeID3 from "node-id3"
   import type { IAudioMetadata } from "music-metadata-browser"
 
-  // this will be either a volume or individual file
   export let item: Item
-  // either way, we get all the data here
   let {
     relativePath,
     originalFileName,
@@ -46,11 +44,6 @@
    * percentCompleted store for the item, so we can update the progress in the grid view
    */
   let store = getStore(relativePath, percentCompleted)
-
-  /**
-   * Is the file playable, used for enabling/disabling play on click
-   */
-  let playable = false
 
   let playing = false
 
@@ -110,7 +103,6 @@
   }
 
   const ended = async () => {
-    // currentItemIndex++;
     if (Math.abs(currentTime - currentItems[currentItems.length - 1].end) > 1) {
       currentTime += 0.1
     }
@@ -159,10 +151,6 @@
       for (let [index, item] of volumeChildren.entries()) {
         let { duration = 0 } = item
 
-        // if the duration of the current item plus the previous items' durations
-        // is greater than or equal to currentTime, the current item holds the correct
-        // time, so set this as the start.
-
         currentItems.push({start: prevDurations, end: prevDurations + duration, item})
         console.log(`pushing {elementID: '${item.title}', startTimeMs: ${prevDurations * 1000}, endTimeMs: ${(prevDurations + duration) * 1000}} to chapters`)
         chapters.push({
@@ -175,7 +163,6 @@
           if (!found) {
             found = true
             currentItemIndex = index
-            // audio.currentTime = currentTime - prevDurations
           }
         }
         prevDurations += duration
@@ -184,10 +171,8 @@
 
     audioEl.src = currentItems[currentItemIndex].item.url?.toString() ?? ''
 
-    // if (userInteracted) {
-    // }
-
     if ('mediaSession' in navigator) {
+      // this doesn't work correctly with volumes, if each item has it's own artwork.
       navigator.mediaSession.metadata = new MediaMetadata({
         title,
         artist: details,
@@ -205,9 +190,7 @@
   let wasPlaying = false
 
   const setListeners = () => {
-    // console.log('setting listeners')
-      // console.log(audioEl)
-      // audioEl.preservesPitch = true
+      audioEl.preservesPitch = true
 
       // audioEvents.forEach(ev => {
       //   // console.log(ev)
@@ -222,8 +205,7 @@
       // audioEl.addEventListener('playing', () => playing = true)
       audioEl.addEventListener('play', () => playing = true)
       audioEl.addEventListener('timeupdate', () => {
-        if (!changing) { // && currentItemIndex == index) {
-          // currentTime = currentItems[index].start + audioEl.currentTime
+        if (!changing) {
           currentTime = currentItems[currentItemIndex].start + audioEl.currentTime
           $store = (currentTime / duration) * 100
         }
@@ -233,13 +215,10 @@
 
   const playPause = async () => {
     console.log(`playPause, playing: ${playing}`)
-    // if (context.state === 'suspended') context.resume()
     if (!userInteracted) userInteracted = true
     if (playing) {
-      // console.log('pausing')
       audioEl.pause()
     } else {
-      // console.log('playing')
       audioEl.play().then(console.log).catch(console.error)
     }
     playing = !playing
@@ -255,7 +234,6 @@
     }
   }
 
-  // this should set the overall time since other things map the current time to which item is playing
   const skip = (time: number) => {
     changing = true
 
@@ -303,7 +281,6 @@
 
     if (sleepTimer.includes('h')) {
       setTimeout(() => {
-        // this won't work if the item is the next item.
         audioEl.pause()
         sleepTimerEl.value = 'Sleep timer'
       }, 1 * 60 * 60 * 1000)
@@ -319,41 +296,33 @@
   let currentChapter: {startTimeMs?: number, endTimeMs?: number, item?: Item} = {}
 
   $: {
-    // Determine which audio file should be playing based on currentTime
     let targetIndex = currentItems.findIndex(item => 
       currentTime >= item.start && currentTime < item.end
-    );
+    )
 
     if (targetIndex !== -1 && targetIndex !== currentItemIndex) {
-      // changing = true
-      // Switching to a new audio file
+      // I want this in case wasPlaying changes to false between pause/play.
       let wp = playing || wasPlaying
-      audioEl.pause();
-      currentItemIndex = targetIndex;
-      // let adjustedCurrentTime = currentTime - currentItems[currentItemIndex].start;
-      // audioEl.currentTime = adjustedCurrentTime;
-      audioEl.src = currentItems[currentItemIndex].item.url?.toString() ?? '';
+      audioEl.pause()
+      currentItemIndex = targetIndex
+      audioEl.src = currentItems[currentItemIndex].item.url?.toString() ?? ''
       audioEl.load()
-      audioEl.currentTime = currentTime - currentItems[currentItemIndex].start;
+      audioEl.currentTime = currentTime - currentItems[currentItemIndex].start
       if (wp) {
-        audioEl.play().catch(console.error);
+        audioEl.play().catch(console.error)
       }
     } else if (targetIndex === currentItemIndex) {
-      // changing = true
-      // Adjust currentTime within the current audio element
-      let adjustedCurrentTime = currentTime - currentItems[currentItemIndex].start;
+      let adjustedCurrentTime = currentTime - currentItems[currentItemIndex].start
       if (Math.abs(audioEl.currentTime - adjustedCurrentTime) > 0.1) {
-        audioEl.currentTime = adjustedCurrentTime;
+        audioEl.currentTime = adjustedCurrentTime
       }
     }
   }
 
   $: {
-    console.log('currentChapter');
-    // Update current chapter based on currentTime
     currentChapter = chapters.find(chapter => 
       chapter.startTimeMs <= currentTime * 1000 && chapter.endTimeMs >= currentTime * 1000
-    );
+    )
   }
 
   let changing = false
@@ -511,19 +480,9 @@
   }
 </style>
 
-<!-- {#if mounted}
-{#each currentItems as curItem, i} -->
-  <audio
-    crossorigin=anonymous
-    bind:this={audioEl}
-    bind:playbackRate={speed}
-  >
-  </audio>
-    <!-- src={curItem.item.url?.toString() ?? ''} -->
-<!-- {/each}
-{/if} -->
-    <!-- on:canplay={canplay} -->
-    <!-- bind:currentTime={currentTimes[i]} -->
-
-<!-- <audio crossorigin="anonymous" bind:this={audioEl} bind:playbackRate={speed} bind:currentTime on:canplay={canplay}>
-</audio> -->
+<audio
+  crossorigin=anonymous
+  bind:this={audioEl}
+  bind:playbackRate={speed}
+>
+</audio>

@@ -1,5 +1,5 @@
 <script lang='ts'>
-    import { library } from "$lib/api"
+  import { library } from "$lib/api"
   import type { Item } from "$lib/types"
   import { onDestroy, onMount } from "svelte"
   import { fade } from "svelte/transition"
@@ -8,37 +8,43 @@
 
   let grid: HTMLDivElement
 
-  let dragSrcEl = null;
+  let dragSrcEl: HTMLElement
 
-  function handleDragStart(e) {
-    this.style.opacity = "0.4";
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = "move";
+  function handleDragStart(e: DragEvent) {
+    if (!e.target) return
+    let target = e.target as HTMLElement
+    target.style.opacity = "0.4"
+    dragSrcEl = target
+    if (e.dataTransfer)
+      e.dataTransfer.effectAllowed = "move"
   }
 
-  function handleDragOver(e) {
+  function handleDragOver(e: DragEvent) {
     if (e.preventDefault) {
-      e.preventDefault();
+      e.preventDefault()
     }
-    e.dataTransfer.dropEffect = "move";
-    return false;
+    if (e.dataTransfer)
+      e.dataTransfer.dropEffect = 'move'
+    return false
   }
 
-  function handleDragEnter(e) {
-    this.classList.add("over");
+  function handleDragEnter(e: DragEvent) {
+    if (e.target)
+      (e.target as HTMLElement).classList.add("over")
   }
 
-  function handleDragLeave(e) {
-    this.classList.remove("over");
+  function handleDragLeave(e: DragEvent) {
+    if (e.target)
+      (e.target as HTMLElement).classList.remove("over")
   }
 
-  function handleDrop(e) {
-    if (e.stopPropagation) {
-      e.stopPropagation();
-    }
+  function handleDrop(e: DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
 
-    if (dragSrcEl != this) {
-      let from = parseInt(this.id)
+    let target = (e.target as HTMLElement)
+    if (dragSrcEl != target) {
+      let from = parseInt(target.id)
       let to = parseInt(dragSrcEl.id)
       ;[
         items[from].orderRank,
@@ -49,44 +55,44 @@
       ]
       let start = Math.min(from, to)
       let end = Math.max(from, to)
-      for (let i = from; i <= to; i++) {
-        library.updateMetadata(items[i])
+      for (let i = start; i <= end; i++) {
+        // library.updateMetadata(items[i])
       }
       // library.updateMetadata(items[from])
       // library.updateMetadata(items[to])
 
-      this.replaceWith(this, dragSrcEl);
+      target.replaceWith(target, dragSrcEl)
     }
-    return false;
+    return false
   }
 
-  function handleDragEnd(e) {
-    this.style.opacity = "1";
+  function handleDragEnd(e: DragEvent) {
+    (e.target as HTMLElement).style.opacity = "1"
     grid.childNodes.forEach(function(item) {
-      if (item.classList)
-        item.classList.remove("over");
-    });
+      if ((item as HTMLElement).classList)
+        (item as HTMLElement).classList.remove("over")
+    })
   }
 
   onMount(() => {
     for (let child of grid.children) {
-      child.addEventListener("dragstart", handleDragStart);
-      child.addEventListener("dragenter", handleDragEnter);
-      child.addEventListener("dragover", handleDragOver);
-      child.addEventListener("dragleave", handleDragLeave);
-      child.addEventListener("drop", handleDrop);
-      child.addEventListener("dragend", handleDragEnd);
+      child.addEventListener("dragstart", handleDragStart)
+      child.addEventListener("dragenter", handleDragEnter)
+      child.addEventListener("dragover", handleDragOver)
+      child.addEventListener("dragleave", handleDragLeave)
+      child.addEventListener("drop", handleDrop)
+      child.addEventListener("dragend", handleDragEnd)
     }
   })
 
   onDestroy(() => {
     for (let child of grid.children) {
-      child.removeEventListener("dragstart", handleDragStart);
-      child.removeEventListener("dragenter", handleDragEnter);
-      child.removeEventListener("dragover", handleDragOver);
-      child.removeEventListener("dragleave", handleDragLeave);
-      child.removeEventListener("drop", handleDrop);
-      child.removeEventListener("dragend", handleDragEnd);
+      child.removeEventListener("dragstart", handleDragStart)
+      child.removeEventListener("dragenter", handleDragEnter)
+      child.removeEventListener("dragover", handleDragOver)
+      child.removeEventListener("dragleave", handleDragLeave)
+      child.removeEventListener("drop", handleDrop)
+      child.removeEventListener("dragend", handleDragEnd)
     }
   })
 </script>

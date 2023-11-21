@@ -50,10 +50,6 @@
     color: var(--primary);
   }
 
-  /* input[type=text]:focus { */
-    /* display: none; */
-  /* } */
-
   div#container{
     display: grid;
     height: 100%;
