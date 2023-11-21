@@ -13,7 +13,6 @@
   import { formatTime, getMetadata } from "$lib/util"
   import type NodeID3 from "node-id3"
   import type { IAudioMetadata } from "music-metadata-browser"
-  import { audioEvents } from "$lib/consts"
 
   // this will be either a volume or individual file
   export let item: Item
