@@ -90,7 +90,6 @@ loading..
 {#if player}
   {#key player.relativePath}
     <Player item={player} />
-    <Bookmarks item={player} />
   {/key}
 {/if}
 
