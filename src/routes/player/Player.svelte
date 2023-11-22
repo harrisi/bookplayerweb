@@ -14,6 +14,7 @@
   import type NodeID3 from "node-id3"
   import type { IAudioMetadata } from "music-metadata-browser"
   import Popup from "$lib/components/Popup.svelte"
+  import Bookmarks from "$lib/components/Bookmarks.svelte"
 
   export let item: Item
   let {
@@ -339,6 +340,7 @@
 
   let showing: { top: number, left: number } | undefined
   let sleepShowing: { top: number, left: number } | undefined
+  let bookmarksShowing: { top: number, left: number } | undefined
 
 </script>
 
@@ -432,6 +434,21 @@
             <option value={val}>{val}</option>
           {/each}
         </select>
+      </Popup>
+      {/if}
+
+      <button on:click|preventDefault|stopPropagation={e => {
+        const target = e.target.tagName === 'DIV' ? e.target.parentNode : e.target
+        bookmarksShowing = bookmarksShowing !== undefined ? undefined : { top: target.offsetTop, left: target.offsetLeft + target.offsetWidth / 2 }
+      }}>
+        <span class="material-symbols-outlined">
+          bookmarks
+        </span>
+      </button>
+
+      {#if bookmarksShowing}
+      <Popup bind:showing={bookmarksShowing} title='Bookmarks'>
+        <Bookmarks {item} />
       </Popup>
       {/if}
     </div>
