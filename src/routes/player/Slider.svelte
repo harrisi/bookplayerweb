@@ -38,6 +38,7 @@
   width: 100%;
   margin: 0;
   appearance: none;
+  border-radius: 5px;
   background-color: var(--tertiarySystemBackground);
   cursor: pointer;
 }
@@ -49,8 +50,7 @@ input[type='range']::-webkit-slider-runnable-track {
 input[type='range']::-webkit-slider-thumb {
   width: 0;
   appearance: none;
-  background: var(--accent);
-  box-shadow: -100vw 0 0 100vw var(--accent);
+  box-shadow: -50vw 0 0 50vw var(--accent);
 }
 
 input[type=range]::-moz-range-track {

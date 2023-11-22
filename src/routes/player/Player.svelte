@@ -9,6 +9,7 @@
   import { ItemType, type Item } from "$lib/types"
   import Overlay from "$lib/components/Overlay.svelte"
   import Slider from "./Slider.svelte"
+  import SliderSpeed from './SliderSpeed.svelte'
   import { settings } from "$lib/settings"
   import { formatTime, getMetadata } from "$lib/util"
   import type NodeID3 from "node-id3"
@@ -377,7 +378,7 @@
         </button>
         {#if showing}
           <Popup bind:showing title='Playback speed'>
-            <Slider min='0.5' max=4 step='0.1' bind:value={speed} onChange={() => { audioEl.playbackRate = speed; console.log('change'); }} />
+            <SliderSpeed min=0.5 max=4 step=0.1 bind:value={speed} onChange={() => { audioEl.playbackRate = speed; console.log('change'); }} />
           </Popup>
         {/if}
       </label>
