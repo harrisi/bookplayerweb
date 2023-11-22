@@ -8,7 +8,6 @@
   import { browser } from '$app/environment'
   import { ItemType, type Item } from '$lib/types'
   import { fade } from 'svelte/transition';
-  import Bookmarks from '$lib/components/Bookmarks.svelte'
   import Grid from './Grid.svelte'
 
   let token = browser ? localStorage.getItem('token') : ''
