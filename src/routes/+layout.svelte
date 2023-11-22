@@ -190,8 +190,7 @@
   :global(body) {
     margin: 0;
     min-height: 100vh;
-    background-color: #f4f4f5;
-    /* background-color: var(--systemBackground); */
+    background-color: var(--systemBackground);
     color: var(--primary);
   }
 
