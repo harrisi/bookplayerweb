@@ -41,7 +41,7 @@
     transform: translate(-50%, -120%);
     border-radius: 5px;
     padding: 5px;
-    background-color: var(--secondary);
+    background-color: var(--tertiarySystemBackground);
     gap: 0.25rem;
     justify-content: center;
   }
@@ -67,12 +67,11 @@
     margin-left: -10px;
     border-width: 10px;
     border-style: solid;
-    border-color: var(--secondary) transparent transparent transparent;
+    border-color: var(--tertiarySystemBackground) transparent transparent transparent;
     pointer-events: none;
   }
 
   button {
     cursor: pointer;
-    /* margin-bottom: 3px; */
   }
 </style>
