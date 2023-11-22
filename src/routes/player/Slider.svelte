@@ -33,66 +33,40 @@
 <input bind:this={el} type='range' {min} {max} {step} bind:value on:change={onChange} />
 
 <style>
-  /* this is a placeholder style, which will be changed. Just wanted to get something consistent across browsers while testing */
-  /* credit: https://www.smashingmagazine.com/2021/12/create-custom-range-input-consistent-browsers */
-
-  /*********** Baseline, reset styles ***********/
-input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
+  input[type='range'] {
+  overflow: hidden;
   width: 100%;
-}
-
-/* Removes default focus */
-input[type="range"]:focus {
-  outline: none;
-}
-
-/******** Chrome, Safari, Opera and Edge Chromium styles ********/
-/* slider track */
-input[type="range"]::-webkit-slider-runnable-track {
-  background-color: var(--accent);
-  border-radius: 1px;
-  height: 0.25rem;
-}
-
-/* slider thumb */
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; /* Override default look */
+  margin: 0;
   appearance: none;
-  margin-top: -6px; /* Centers thumb on the track */
+  background-color: var(--tertiarySystemBackground);
+  cursor: pointer;
+}
+
+input[type='range']::-webkit-slider-runnable-track {
+  height: 20px;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  width: 0;
+  appearance: none;
+  background: var(--accent);
+  box-shadow: -100vw 0 0 100vw var(--accent);
+}
+
+input[type=range]::-moz-range-track {
+    height: 20px;
+    background: var(--tertiarySystemBackground);
+}
+
+input[type=range]::-moz-range-thumb {
+    height: 20px;
+    width: 0;
+    background: var(--tertiarySystemBackground);
+    border: none;
+}
+
+input[type="range"]::-moz-range-progress {
   background-color: var(--accent);
-  border-radius: 50%;
-  height: 1rem;
-  width: 1rem;
-}
-
-input[type="range"]:focus::-webkit-slider-thumb {
-  outline: 3px solid var(--accent);
-  outline-offset: 0.125rem;
-}
-
-/*********** Firefox styles ***********/
-/* slider track */
-input[type="range"]::-moz-range-track {
-  background-color: var(--accent);
-  border-radius: 1px;
-  height: 0.25rem;
-}
-
-/* slider thumb */
-input[type="range"]::-moz-range-thumb {
-  background-color: var(--accent);
-  border: none; /*Removes extra border that FF applies*/
-  border-radius: 50%;
-  height: 1rem;
-  width: 1rem;
-}
-
-input[type="range"]:focus::-moz-range-thumb{
-  outline: 3px solid var(--accent);
-  outline-offset: 0.125rem;
+  height: 100%;
 }
 </style>

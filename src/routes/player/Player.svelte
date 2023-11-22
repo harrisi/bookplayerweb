@@ -13,6 +13,7 @@
   import { formatTime, getMetadata } from "$lib/util"
   import type NodeID3 from "node-id3"
   import type { IAudioMetadata } from "music-metadata-browser"
+  import Popup from "$lib/components/Popup.svelte"
 
   export let item: Item
   let {
@@ -249,7 +250,7 @@
           console.log('sleep timer finished')
           audioEl.pause()
           wasPlaying = false
-          sleepTimerEl.value = 'Sleep timer'
+          sleepTimer = 'Sleep timer'
         }, {
           once: true,
         })
@@ -263,7 +264,7 @@
               console.log('sleep timer finished')
               audioEl.pause()
               wasPlaying = false
-              sleepTimerEl.value = 'Sleep timer'
+              sleepTimer = 'Sleep timer'
               audioEl.removeEventListener('timeupdate', f)
             }
           }
@@ -282,14 +283,14 @@
     if (sleepTimer.includes('h')) {
       setTimeout(() => {
         audioEl.pause()
-        sleepTimerEl.value = 'Sleep timer'
+        sleepTimer = 'Sleep timer'
       }, 1 * 60 * 60 * 1000)
     }
 
     let minutes = sleepTimer.match(/\d+/)?.at(0)!
     setTimeout(() => {
       audioEl.pause()
-      sleepTimerEl.value = 'Sleep timer'
+      sleepTimer = 'Sleep timer'
     }, parseInt(minutes) * 60 * 1000)
   }
 
@@ -336,6 +337,9 @@
     })
   }
 
+  let showing: { top: number, left: number } | undefined
+  let sleepShowing: { top: number, left: number } | undefined
+
 </script>
 
 <Overlay --bottom='5px'>
@@ -358,12 +362,22 @@
       </div>
     </div>
 
-
     <div id='right'>
       <!-- svelte-ignore a11y-label-has-associated-control -->
       <label id='speed'>
-        {speed}
-        <Slider min='0.5' max=4 step='0.1' bind:value={speed} onChange={() => { audioEl.playbackRate = speed; console.log('change'); }} />
+        <button on:click|preventDefault|stopPropagation={e => {
+          const target = e.target.tagName === 'DIV' ? e.target.parentNode : e.target
+          showing = showing !== undefined ? undefined : { top: target.offsetTop, left: target.offsetLeft + target.offsetWidth / 2 }
+        }}>
+          <div>
+            {speed.toFixed(1)}x
+          </div>
+        </button>
+        {#if showing}
+          <Popup bind:showing title='Playback speed'>
+            <Slider min='0.5' max=4 step='0.1' bind:value={speed} onChange={() => { audioEl.playbackRate = speed; console.log('change'); }} />
+          </Popup>
+        {/if}
       </label>
 
       <button on:click={() => skip(-$settings.playback.skipIntervals.rewind.opt)}>
@@ -398,11 +412,28 @@
         </svg>
       </button>
 
-      <select name='sleep' id='sleep' bind:this={sleepTimerEl} bind:value={sleepTimer} on:change={sleep}>
-        {#each ['Sleep timer', '5m', '10m', '15m', '30m', '1h', 'current chapter', 'custom'] as val}
-          <option value={val}>{val}</option>
-        {/each}
-      </select>
+      <button on:click|preventDefault|stopPropagation={e => {
+        const target = e.target.tagName === 'DIV' ? e.target.parentNode : e.target
+        sleepShowing = sleepShowing !== undefined ? undefined : { top: target.offsetTop, left: target.offsetLeft + target.offsetWidth / 2 }
+      }}>
+      {#if sleepTimer && sleepTimer !== 'Sleep timer'}
+        {sleepTimer}
+      {:else}
+        <span class="material-symbols-outlined">
+          bedtime
+        </span>
+      {/if}
+      </button>
+
+      {#if sleepShowing}
+      <Popup bind:showing={sleepShowing} title='Sleep timer'>
+        <select name='sleep' id='sleep' bind:this={sleepTimerEl} bind:value={sleepTimer} on:change={e => { sleep(); sleepShowing = undefined; }}>
+          {#each ['Sleep timer', '5m', '10m', '15m', '30m', '1h', 'current chapter', 'custom'] as val}
+            <option value={val}>{val}</option>
+          {/each}
+        </select>
+      </Popup>
+      {/if}
     </div>
   </div>
 </Overlay>
@@ -421,6 +452,7 @@
   .progressContainer .times {
     display: flex;
     justify-content: space-between;
+    margin-bottom: 5px;
   }
 
   button {
