@@ -172,7 +172,7 @@
       }
     }
 
-    audioEl.src = currentItems[currentItemIndex].item.url?.toString() ?? ''
+    setSrc()
 
     if ('mediaSession' in navigator) {
       // this doesn't work correctly with volumes, if each item has it's own artwork.
@@ -298,6 +298,31 @@
 
   let currentChapter: {startTimeMs?: number, endTimeMs?: number, item?: Item} = {}
 
+  const setSrc = () => {
+
+    console.log('setSrc')
+
+    let token = localStorage.getItem('token')
+
+    if (navigator.serviceWorker.controller) {
+      console.log('sending service worker token')
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SET_TOKEN',
+        token,
+      })
+    } else {
+      console.log('not sending token')
+    }
+
+    console.log('setting src')
+    let res = currentItems[currentItemIndex].item.url?.toString() ?? ''
+
+    // if ($settings.experimental.apiBeta.opt) {
+    //   res += res ? `?token=${localStorage.getItem('token')}` : ''
+    // }
+    audioEl.src = res
+  }
+
   $: {
     let targetIndex = currentItems.findIndex(item => 
       currentTime >= item.start && currentTime < item.end
@@ -308,7 +333,7 @@
       let wp = playing || wasPlaying
       audioEl.pause()
       currentItemIndex = targetIndex
-      audioEl.src = currentItems[currentItemIndex].item.url?.toString() ?? ''
+      setSrc()
       audioEl.load()
       audioEl.currentTime = currentTime - currentItems[currentItemIndex].start
       if (wp) {

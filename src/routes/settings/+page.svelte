@@ -49,18 +49,16 @@
 
   <hr />
   <h2>{$settings.autoplay.text}</h2>
+  {#each Object.entries($settings.autoplay) as [_, val]}
+    {#if typeof val !== 'string'}
     <label>
       <li>
-        {$settings.autoplay.library.text}
-        <input type='checkbox' bind:checked={$settings.autoplay.library.opt} />
+        {val.text}
+        <input type='checkbox' bind:checked={val.opt} />
       </li>
     </label>
-    <label>
-      <li>
-        {$settings.autoplay.restartFinished.text}
-        <input type='checkbox' bind:checked={$settings.autoplay.restartFinished.opt} />
-      </li>
-    </label>
+    {/if}
+  {/each}
 
   <hr />
   <h2>{$settings.playback.text}</h2>
@@ -110,23 +108,24 @@
   <h2>{$settings.privacy.text}</h2>
     <label>
       <li>
-        <p>
-          {$settings.privacy.disableCrashReports.text}
-        </p>
+        {$settings.privacy.disableCrashReports.text}
         <input type='checkbox' bind:checked={$settings.privacy.disableCrashReports.opt} />
       </li>
     </label>
 
   <hr />
   <h2>{$settings.experimental.text}</h2>
+  {#each Object.entries($settings.experimental) as [_, val]}
+    <!-- this is to ignore experimental.text -->
+    {#if typeof val !== 'string'}
     <label>
       <li>
-        <p>
-          {$settings.experimental.ffmpeg.text}
-        </p>
-        <input type='checkbox' bind:checked={$settings.experimental.ffmpeg.opt} />
+        {val.text}
+        <input type='checkbox' bind:checked={val.opt} />
       </li>
     </label>
+    {/if}
+  {/each}
   </ul>
 
   <div id='cacheInfo'>

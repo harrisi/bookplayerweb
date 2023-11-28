@@ -1,4 +1,91 @@
 <script lang='ts'>
+  import { fade } from "svelte/transition"
+  import { onDestroy, onMount } from "svelte"
+  import type { Item } from "$lib/types"
+
+  export let items: Item[]
+
+  let grid: HTMLDivElement
+
+  const swapItems = (fromIndex, toIndex) => {
+    [items[fromIndex], items[toIndex]] = [items[toIndex], items[fromIndex]]
+    // Update any necessary metadata here
+  }
+
+  function handleDragStart(e: DragEvent, index: number) {
+    console.log('drag')
+    e.dataTransfer.effectAllowed = "move"
+    // e.dataTransfer.setData("text/plain", index.toString())
+    e.currentTarget.style.opacity = "0.4"
+  }
+
+  function handleDrop(e: DragEvent, index: number) {
+    e.preventDefault()
+    // const fromIndex = parseInt(e.dataTransfer.getData("text/plain"))
+    // swapItems(e.target.id, index)
+  }
+
+  function handleDragOver(e: DragEvent) {
+    e.preventDefault()
+  }
+
+  function handleDragEnd(e: DragEvent) {
+    e.currentTarget.style.opacity = "1"
+  }
+
+  onMount(() => {
+    let index = 0
+    for (let child of grid.children) {
+      child.addEventListener("dragstart", e => handleDragStart(e, index))
+      // child.addEventListener("dragenter", handleDragEnter)
+      child.addEventListener("dragover", handleDragOver)
+      // child.addEventListener("dragleave", handleDragLeave)
+      child.addEventListener("drop", e => handleDrop(e, index))
+      child.addEventListener("dragend", handleDragEnd)
+      index++
+    }
+  })
+
+  // onDestroy(() => {
+  //   let index = 0
+  //   for (let child of grid.children) {
+  //     child.removeEventListener("dragstart", handleDragStart)
+  //     child.removeEventListener("dragenter", handleDragEnter)
+  //     child.removeEventListener("dragover", handleDragOver)
+  //     child.removeEventListener("dragleave", handleDragLeave)
+  //     child.removeEventListener("drop", handleDrop)
+  //     child.removeEventListener("dragend", handleDragEnd)
+  //     index++
+  //   }
+  // })
+</script>
+
+<div bind:this={grid} id='grid' class='library' transition:fade>
+  <slot />
+  <!-- {#each items as item, index (item.id)}
+    <div
+      class="grid-item"
+      draggable="true"
+      on:dragstart={(e) => handleDragStart(e, index)}
+      on:dragover={handleDragOver}
+      on:drop={(e) => handleDrop(e, index)}
+      on:dragend={handleDragEnd}
+      style="opacity: 1;">
+    </div>
+  {/each} -->
+</div>
+
+<!-- <style>
+  #grid {
+    /* Existing styles */
+  }
+  .grid-item {
+    /* Styles for individual grid items */
+  }
+</style> -->
+
+
+<!-- <script lang='ts'>
   import { library } from "$lib/api"
   import type { Item } from "$lib/types"
   import { onDestroy, onMount } from "svelte"
@@ -95,11 +182,11 @@
       child.removeEventListener("dragend", handleDragEnd)
     }
   })
-</script>
-
+</script> -->
+<!-- 
 <div bind:this={grid} id='grid' class='library' transition:fade>
   <slot />
-</div>
+</div> -->
 
 <style>
   #grid {

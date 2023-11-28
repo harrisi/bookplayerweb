@@ -4,11 +4,12 @@
   import FileItem from './FileItem.svelte'
   import VolumeItem from './VolumeItem.svelte'
   import Player from '../player/Player.svelte'
-  import { goto } from '$app/navigation';
+  import { goto } from '$app/navigation'
   import { browser } from '$app/environment'
   import { ItemType, type Item } from '$lib/types'
-  import { fade } from 'svelte/transition';
+  import { fade } from 'svelte/transition'
   import Grid from './Grid.svelte'
+  import { onMount } from 'svelte'
 
   let token = browser ? localStorage.getItem('token') : ''
   if (!token && browser) goto('/')

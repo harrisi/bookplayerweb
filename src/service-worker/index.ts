@@ -32,17 +32,29 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(deleteOldCaches())
 })
 
+let authToken: string | undefined = undefined
+
+self.addEventListener('message', e => {
+  console.log('message')
+  console.log(e)
+  if (e.data && e.data.type === 'SET_TOKEN') {
+    authToken = e.data.token
+  }
+})
+
 self.addEventListener('fetch', (event) => {
+  // this is just here because I was having some weird typescript issues.
+  const fe = event as FetchEvent
   // ignore POST requests etc
 	// @ts-ignore
-  if (event.request.method !== 'GET') return
+  if (fe.request.method !== 'GET') return
 	// @ts-ignore
-  const url = new URL(event.request.url)
   // don't cache S3 fetches here because we're using OPFS for this
   // if (url.hostname.includes('amazonaws.com')) return
 
   async function respond() {
     const cache = await caches.open(CACHE)
+    const url = new URL(fe.request.url)
 
     // `build`/`files` can always be served from the cache
     if (ASSETS.includes(url.pathname)) {
@@ -51,22 +63,45 @@ self.addEventListener('fetch', (event) => {
 
     // for everything else, try the network first, but
     // fall back to the cache if we're offline
+    let r = fe.request
+
+    let headers: Headers | undefined
+    // this is just for the audio player, to inject the auth header.
+    if (url.pathname.startsWith('/v1/storage/')) {
+      console.log('token', authToken)
+
+      // url.searchParams.delete('token')
+
+      headers = new Headers(fe.request.headers)
+      headers.set('Authorization', `Bearer ${authToken}`)
+
+      r = new Request(url, {
+        method: fe.request.method,
+        headers: headers,
+        mode: fe.request.mode,
+        credentials: fe.request.credentials,
+        redirect: fe.request.redirect,
+        referrer: fe.request.referrer,
+        body: fe.request.bodyUsed ? fe.request.body : null
+      })
+    }
+
     try {
       // @ts-ignore
-      const response = await fetch(event.request)
+      const response = await fetch(r)
 
-      if (response.ok) {
+      if (response.status === 200) {
         // @ts-ignore
-        cache.put(event.request, response.clone())
+        cache.put(r, response.clone())
       }
 
       return response
     } catch {
       // @ts-ignore
-      return cache.match(event.request)
+      return cache.match(r)
     }
   }
 
 	// @ts-ignore
-  event.respondWith(respond())
+  fe.respondWith(respond())
 })

@@ -1,8 +1,14 @@
 import { browser, dev } from '$app/environment'
 import type { HttpMethod } from '@sveltejs/kit'
 import type { Bookmark, Item } from './types'
+import { settings } from '$lib/settings'
+import { get } from 'svelte/store'
 
-const root = dev ? 'http://localhost:5003/v1' : 'https://api.tortugapower.com/v1'
+const root = dev
+  ? 'http://localhost:5003/v1'
+  : (get(settings).experimental.apiBeta.opt
+  ? 'https://api-staging.tortugapower.com/v1'
+  : 'https://api.tortugapower.com/v1')
 
 const thenResp = (resp: Response) => {
   if (resp.ok) {
@@ -27,6 +33,9 @@ const raw = async (method: HttpMethod, path: string, body?: BodyInit | object | 
   if (browser) {
     headers.append('Origin', dev ? 'https://bp.fofgof.xyz' : window.location.href)
   }
+  if (get(settings).experimental.apiBeta.opt) {
+    headers.append('Accept-Version', 'latest')
+  }
   const opts: RequestInit = {headers, method}
   if (body) {
     opts.body = JSON.stringify(body)
@@ -34,7 +43,7 @@ const raw = async (method: HttpMethod, path: string, body?: BodyInit | object | 
   if (keepalive) {
     opts.keepalive = true
   }
-  headers.append('If-Modified-Since', new Date().toUTCString())
+  // headers.append('If-Modified-Since', new Date().toUTCString())
   const f = await fetch(`${root}${path}`, opts)
     .then(thenResp)
     .catch(console.error)
@@ -193,4 +202,11 @@ const user = Object.freeze({
   }
 })
 
-export { user, library }
+const storage = Object.freeze({
+  getFile: async(item: {relativePath: string}, range?: string, keepalive?: boolean) => {
+    if (!get(settings).experimental.apiBeta.opt) return Promise.reject('unreachable')
+    return await apiCall.get(`/storage/${encodeURIComponent(item.relativePath)}`, keepalive)
+  }
+})
+
+export { user, library, storage }

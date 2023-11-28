@@ -45,6 +45,7 @@ interface Settings {
   experimental: {
     text: string,
     ffmpeg: Setting<boolean>,
+    apiBeta: Setting<boolean>,
   },
 }
 
@@ -124,6 +125,10 @@ let _default: Settings = {
       opt: false,
       text: `Use FFmpeg.wasm for parsing file metadata.
       This may be able to parse chapters for some files better than the default method.`
+    },
+    apiBeta: {
+      opt: false,
+      text: `Use the latest version of the API. This is quite likely to break things.`
     }
   }
 }

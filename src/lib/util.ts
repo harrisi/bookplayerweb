@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer"
 import { parseBuffer, type IAudioMetadata } from 'music-metadata-browser'
-import { library } from "./api"
+import { library, storage } from "./api"
 import type { Item } from "./types"
 import NodeID3, { read } from "node-id3"
 import { FFmpeg } from '@ffmpeg/ffmpeg'
@@ -23,6 +23,7 @@ const formatTime = (n: number) => {
 }
 
 const ffmpeg = new FFmpeg()
+const beta = get(settings).experimental.apiBeta.opt
 
 const initFFmpeg = async () => {
   if (ffmpeg.loaded) return;
@@ -107,13 +108,18 @@ const getFFMetadata = async (path: string, data: Uint8Array) => {
 }
 
 const fetchMP3 = async (item: Item) => {
+  console.log('fetchmp3')
   if (!item.url) return;
+
+  const token = localStorage.getItem('token')!
+
+  const headers = new Headers()
+  headers.set('Range', `bytes=0-9`)
+  if (beta) headers.set('Authorization', `Bearer ${token}`)
 
   let firstFrame = await fetch(item.url, {
     mode: 'cors',
-    headers: {
-      Range: 'bytes=0-9',
-    },
+    headers,
   }).then(res => res.blob())
 
   let maybeID3 = await firstFrame.slice(0, 3).text()
@@ -123,25 +129,30 @@ const fetchMP3 = async (item: Item) => {
   let sizeView = new Uint8Array(sizeBuf)
   let bin = [...sizeView].map(n => n.toString(2).padStart(8, '0').slice(1)).join('')
 
-  return fetch(item.url, {
+  headers.set('Range', `bytes=0-${parseInt(bin, 2) + 10}`)
+
+  return await fetch(item.url, {
     mode: 'cors',
-    headers: {
-      Range: `bytes=0-${parseInt(bin, 2) + 10}`,
-    }
+    headers,
   }).then(async res => new Uint8Array(await res.arrayBuffer()))
 }
 
 const fetchMP4 = async (item: Item) => {
+  console.log('fetchmp4')
+  const token = localStorage.getItem('token')!
+
   let boxStart = 0
 
   let boxes: Uint8Array[] = []
 
   for (let i = 0; i < 10; i++) {
+    console.log('fetch mp4 loop')
+    const headers = new Headers()
+    if (beta) headers.set('Authorization', `Bearer ${token}`)
+    headers.set('Range', `bytes=${boxStart}-${boxStart + 7}`)
     const boxSize = await fetch(item.url!, {
       mode: 'cors',
-      headers: {
-        Range: `bytes=${boxStart}-${boxStart + 7}`,
-      },
+      headers,
     }).then(resp => {
       if (resp.ok)
         return resp.arrayBuffer()
@@ -169,11 +180,11 @@ const fetchMP4 = async (item: Item) => {
       continue
     }
 
+    headers.set('Range', `bytes=${boxStart + 8}-${boxStart + size - 1}`)
+
     let boxData = await fetch(item.url!, {
       mode: 'cors',
-      headers: {
-        Range: `bytes=${boxStart + 8}-${boxStart + size - 1}`,
-      },
+      headers,
     }).then(resp => {
       if (resp.ok)
         return resp.arrayBuffer()
