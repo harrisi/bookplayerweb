@@ -62,7 +62,7 @@ loading..
 
   {#key items.toString()}
   <Grid bind:items>
-  {#each items.toSorted((a, b) =>
+  {#each [...items].sort((a, b) =>
     (a.orderRank ?? 0) - (b.orderRank ?? 0)
   ) as item, i (item.relativePath)}
     {#if item.type === ItemType.Folder}
