@@ -66,15 +66,15 @@ loading..
     (a.orderRank ?? 0) - (b.orderRank ?? 0)
   ) as item, i (item.relativePath)}
     {#if item.type === ItemType.Folder}
-      <button id={i.toString()} draggable="false" in:fade|global on:click={() => folderClick(item.title ?? '')}>
+      <button id={i.toString()} draggable="true" in:fade|global on:click={() => folderClick(item.title ?? '')}>
         <FolderItem {item} />
       </button>
     {:else if item.type === ItemType.Volume}
-      <button id={i.toString()} draggable="false" in:fade|global on:click={() => volumeClick(item)}>
+      <button id={i.toString()} draggable="true" in:fade|global on:click={() => volumeClick(item)}>
         <VolumeItem {item} />
       </button>
     {:else if item.type === ItemType.File}
-      <button id={i.toString()} draggable="false" in:fade|global on:click={() => fileClick(item)}>
+      <button id={i.toString()} draggable="true" in:fade|global on:click={() => fileClick(item)}>
         <FileItem {item} />
       </button>
     {/if}

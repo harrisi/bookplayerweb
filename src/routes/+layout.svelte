@@ -1,19 +1,19 @@
 <script lang='ts'>
-  // import Upload from './upload/+page.svelte'
-  import { browser } from '$app/environment'
-  import { afterNavigate } from '$app/navigation'
-  import Overlay from '$lib/components/Overlay.svelte'
-  import ContextMenu from '$lib/components/ContextMenu.svelte'
-  import { page } from '$app/stores'
-  import Popover from '$lib/components/Popover.svelte'
-
-  let token = browser && localStorage.getItem('token')
-  afterNavigate(() => {
-    token = localStorage.getItem('token')
-  })
-
-  $: popover = $page.url.search === '?about'
+  import Overlay from "$lib/components/Overlay.svelte"
 </script>
+
+<div class='rootContainer'>
+
+<div id='betaHeader'>
+  <p>
+    This is beta software. Please <a class='betaLink' href='https://github.com/TortugaPower/bookplayerweb/issues' target='_blank'>file issues on GitHub</a>,
+    or <a class='betaLink' href={`mailto:support@bookplayer.app?subject=${encodeURIComponent('BookPlayer web support')}`}>send an email to support@bookplayer.app</a>.
+    Thanks for testing!
+  </p>
+</div>
+<slot />
+
+</div>
 
 <svelte:head>
   <link rel="manifest" href="manifest.json" />
@@ -25,166 +25,64 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 </svelte:head>
 
-<div id='betaHeader'>
-  <p>
-    This is beta software. Please <a class='betaLink' href='https://github.com/TortugaPower/bookplayerweb/issues' target='_blank'>file issues on GitHub</a>,
-    or <a class='betaLink' href={`mailto:support@bookplayer.app?subject=${encodeURIComponent('BookPlayer web support')}`}>send an email to support@bookplayer.app</a>.
-  </p>
-  <p>
-    Thanks for testing!
-  </p>
-</div>
-
-{#if popover}
-  <Popover />
-{/if}
-
-<Overlay --top=5px>
-  <header>
-    <nav>
-      <div id='logoContainer'>
-        <img src='logo.png' alt='bookplayer logo' />
-        <span id="logo">BookPlayer</span>
-      </div>
-      <div id='headerControls'>
-        <div id="about">
-          <a class='headerButton' href='?about'>
-            <span class="material-symbols-outlined">info</span>
-            About
-          </a>
-        </div>
-        <div id='library'>
-          <a class='headerButton' href='/library'>
-            <span class='material-symbols-outlined'>library_books</span>
-            Library
-          </a>
-        </div>
-        <div id='settings'>
-          <a class='headerButton' href='/settings'>
-            <span class='material-symbols-outlined'>settings</span>
-            Settings
-          </a>
-        </div>
-        <div id='loginout'>
-          <a class='headerButton' href='/' on:click={() => localStorage.removeItem('token')} id="logout">
-            <span class='material-symbols-outlined'>door_open</span>
-            {#if token}
-              Logout
-            {:else}
-              <div id="login">Login</div>
-            {/if}
-          </a>
-        </div>
-      </div>
-    </nav>
-  </header>
-</Overlay>
-
-<!-- <Upload /> -->
-
-<div class='container'>
-  <slot />
-</div>
-
-<ContextMenu />
-
 <style>
+  .rootContainer {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+  }
+
   a.betaLink {
     text-decoration: underline;
   }
 
-  a {
+  :global(a) {
     outline: none;
-    text-decoration: none;
+    text-decoration: underline;
     border-radius: 3px;
   }
 
-  a:link {
+  :global(a:link) {
     color: inherit;
   }
 
-  a:visited {
+  :global(a:visited) {
     color: inherit;
   }
 
-  a:focus {
+  :global(a:focus) {
     text-decoration: none;
     background: var(--secondary);
   }
 
-  a:hover {
+  :global(a:hover) {
     text-decoration: none;
     background: var(--secondary);
   }
 
-  a:active {
+  :global(a:active) {
     background: var(--accent);
     color: var(--primary);
   }
 
-  .material-symbols-outlined {
-    font-variation-settings:
-    'FILL' var(--fill),
-    'wght' 400,
-    'GRAD' 0,
-    'opsz' 24
-  }
-
-  div.container {
-    display: grid;
-  }
-
-  div#headerControls {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  a.headerButton {
-    display: grid;
-    grid-template-rows: 1fr auto;
-    padding: 5px;
-    margin: 5px;
-    justify-content: space-evenly;
-  }
-
-  div#logoContainer {
-    height: inherit;
-    justify-self: baseline;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    align-items: center;
-  }
-
-  img {
-    object-fit: contain;
-    max-height: 10vh;
-  }
-
-  header {
-    width: 100%;
-  }
-
-  nav {
-    display: flex;
-    height: 10vh;
-    justify-content: space-between;
-    align-items: center;
-    text-align: center;
-  }
-
   #betaHeader {
-    display: grid;
-    grid-template-rows: 1fr 1fr;
+    width: 100%;
     background-color: var(--accent);
-    justify-content: center;
+    text-align: center;
+    padding-bottom: 2px;
+    padding-top: 2px;
     position: sticky;
     top: 0;
     z-index: 2;
+    height: 2rem;
+    display: grid;
+    align-items: center;
   }
 
   #betaHeader p {
     text-align: center;
     margin: 0;
+    color: white;
   }
 
   :global(body) {
