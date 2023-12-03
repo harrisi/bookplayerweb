@@ -21,9 +21,9 @@ const thenResp = (resp: Response) => {
   }
 }
 
-const raw = async (method: HttpMethod, path: string, body?: BodyInit | object | null, keepalive?: boolean) => {
+const raw = async (method: HttpMethod, path: string, body?: BodyInit | object | null, headers?: HeadersInit) => {
   const token = browser ? localStorage.getItem('token') : ''
-  let headers = new Headers()
+  headers = new Headers(headers)
   if (token) {
     headers.append('Authorization', `Bearer ${token}`)
   }
@@ -40,9 +40,6 @@ const raw = async (method: HttpMethod, path: string, body?: BodyInit | object | 
   if (body) {
     opts.body = JSON.stringify(body)
   }
-  if (keepalive) {
-    opts.keepalive = true
-  }
   // headers.append('If-Modified-Since', new Date().toUTCString())
   const f = await fetch(`${root}${path}`, opts)
     .then(thenResp)
@@ -52,25 +49,25 @@ const raw = async (method: HttpMethod, path: string, body?: BodyInit | object | 
 }
 
 const apiCall = Object.freeze({
-  get: (path: string, keepalive?: boolean) => {
-    return raw('GET', path, null, keepalive)
+  get: (path: string, headers?: HeadersInit) => {
+    return raw('GET', path, null, headers)
   },
 
-  put: async (path: string, body: BodyInit | object, keepalive?: boolean) => {
-    return raw('PUT', path, body, keepalive)
+  put: async (path: string, body: BodyInit | object, headers?: HeadersInit) => {
+    return raw('PUT', path, body, headers)
   },
 
-  post: async (path: string, body: BodyInit | object, keepalive?: boolean) => {
-    return raw('POST', path, body, keepalive)
+  post: async (path: string, body: BodyInit | object, headers?: HeadersInit) => {
+    return raw('POST', path, body, headers)
   },
 
-  delete: async (path: string, body?: BodyInit | object | null, keepalive?: boolean) => {
-    return raw('DELETE', path, body, keepalive)
+  delete: async (path: string, body?: BodyInit | object | null, headers?: HeadersInit) => {
+    return raw('DELETE', path, body, headers)
   },
 })
 
 const library = Object.freeze({
-  getContent: async ({relativePath, sign, noLastItemPlayed}: {relativePath?: string, sign?: boolean, noLastItemPlayed?: boolean}, keepalive?: boolean) => {
+  getContent: async ({relativePath, sign, noLastItemPlayed}: {relativePath?: string, sign?: boolean, noLastItemPlayed?: boolean}, headers?: HeadersInit) => {
     let path = '/library'
     // let inCache: string | null | undefined
     let params = []
@@ -100,7 +97,7 @@ const library = Object.freeze({
     if (params.length) path += '?' + params.join('&')
     let res
     try {
-      res = await apiCall.get(path, keepalive).catch(err => {
+      res = await apiCall.get(path, headers).catch(err => {
         console.log('got err from getContent')
         console.error(err)
       })
@@ -125,87 +122,89 @@ const library = Object.freeze({
     return res
   },
 
-  getKeys: async (keepalive?: boolean) => {
-    return await apiCall.get('/library/keys', keepalive)
+  getKeys: async (headers?: HeadersInit) => {
+    return await apiCall.get('/library/keys', headers)
     .then(res => res.content)
     .catch(console.error)
   },
 
-  createItem: async (item: Item, keepalive?: boolean) => {
-    return await apiCall.put('/library', item, keepalive).then(res => res.content)
+  createItem: async (item: Item, headers?: HeadersInit) => {
+    return await apiCall.put('/library', item, headers).then(res => res.content)
   },
 
-  updateMetadata: async (metadata: Item, keepAlive?: boolean) => {
-    return await apiCall.post('/library', metadata, keepAlive).then(res => res.content)
+  updateMetadata: async (metadata: Item, headers?: HeadersInit) => {
+    return await apiCall.post('/library', metadata, headers).then(res => res.content)
   },
 
-  moveItem: async (src: Item | string, dest: Item | string, keepalive?: boolean) => {
+  moveItem: async (src: Item | string, dest: Item | string, headers?: HeadersInit) => {
     let origin = (typeof src === 'string') ? src : src.relativePath
     let destination = (typeof dest === 'string') ? dest : dest.relativePath
-    return await apiCall.post('/library/move', { origin, destination }, keepalive)
+    return await apiCall.post('/library/move', { origin, destination }, headers)
   },
 
-  renameFolder: async (src: Item | string, dest: Item | string, keepalive?: boolean) => {
+  renameFolder: async (src: Item | string, dest: Item | string, headers?: HeadersInit) => {
     let relativePath = (typeof src === 'string') ? src : src.relativePath
     let newName = (typeof dest === 'string') ? dest : dest.relativePath
-    return await apiCall.post('/library/rename', { relativePath, newName }, keepalive)
+    return await apiCall.post('/library/rename', { relativePath, newName }, headers)
   },
 
-  deleteItem: async (item: Item | string, keepalive?: boolean) => {
+  deleteItem: async (item: Item | string, headers?: HeadersInit) => {
     let relativePath = (typeof item === 'string') ? item : item.relativePath
-    return await apiCall.delete('/library', { relativePath }, keepalive)
+    return await apiCall.delete('/library', { relativePath }, headers)
   },
 
-  deleteFolder: async (item: Item | string, keepalive?: boolean) => {
+  deleteFolder: async (item: Item | string, headers?: HeadersInit) => {
     let relativePath = (typeof item === 'string') ? item : item.relativePath
-    return await apiCall.delete(`/library/folder_in_out?relativePath=${encodeURIComponent(relativePath)}`, null, keepalive)
+    return await apiCall.delete(`/library/folder_in_out?relativePath=${encodeURIComponent(relativePath)}`, null, headers)
   },
 
-  uploadArtwork: async (item: Item | string, thumbnail: string, artwork: BodyInit, keepalive?: boolean) => {
+  uploadArtwork: async (item: Item | string, thumbnail: string, artwork: BodyInit, headers?: HeadersInit) => {
     let relativePath = (typeof item === 'string') ? item : item.relativePath
     let thumbnail_name = thumbnail
-    let url = await apiCall.post('/library/thumbnail_set', { relativePath, thumbnail_name, uploaded: false }, keepalive)
+    let url = await apiCall.post('/library/thumbnail_set', { relativePath, thumbnail_name, uploaded: false }, headers)
       .then(res => res.thumbnail_url)
     await fetch(url, {
       method: 'POST',
       body: artwork,
     })
-    return await apiCall.post('/library/thumbnail_set', { relativePath, thumbnail_name, uploaded: true }, keepalive)
+    return await apiCall.post('/library/thumbnail_set', { relativePath, thumbnail_name, uploaded: true }, headers)
   },
 
-  getBookmarks: async (item?: Item | string, keepalive?: boolean): Promise<Bookmark[]> => {
+  getBookmarks: async (item?: Item | string, headers?: HeadersInit): Promise<Bookmark[]> => {
     let relativePath = (typeof item === 'string') ? item : (item?.relativePath ?? '')
-    return await apiCall.post('/library/bookmarks', { relativePath }, keepalive).then(res => res.bookmarks)
+    return await apiCall.post('/library/bookmarks', { relativePath }, headers).then(res => res.bookmarks)
   },
 
-  updateBookmarks: async (item: Item | string, bookmark: Bookmark, keepalive?: boolean) => {
+  updateBookmarks: async (item: Item | string, bookmark: Bookmark, headers?: HeadersInit) => {
     let key = (typeof item === 'string') ? item : (item.relativePath)
-    return await apiCall.put('/library/bookmark', { key, ...bookmark }, keepalive)
+    return await apiCall.put('/library/bookmark', { key, ...bookmark }, headers)
   },
 
-  getLastPlayed: async (sign = true, keepalive?: boolean) => {
-    return await apiCall.get(`/library/last_played${sign ? '?sign=true' : ''}`, keepalive).then(res => res.lastItemPlayed)
+  getLastPlayed: async (sign = true, headers?: HeadersInit) => {
+    return await apiCall.get(`/library/last_played${sign ? '?sign=true' : ''}`, headers).then(res => res.lastItemPlayed)
   },
 })
 
 const user = Object.freeze({
-  login: async ({id_token}: {id_token: string}, keepalive?: boolean) => {
-    return await apiCall.post('/user/login', {token_id: id_token}, keepalive)
+  login: async ({id_token}: {id_token: string}, headers?: HeadersInit) => {
+    return await apiCall.post('/user/login', {token_id: id_token}, headers)
   },
 
-  getInfo: async (keepalive?: boolean) => {
-    return await apiCall.get('/user', keepalive).then(res => res.user)
+  getInfo: async (headers?: HeadersInit) => {
+    return await apiCall.get('/user', headers).then(res => res.user)
   },
 
-  delete: async (keepalive?: boolean) => {
-    return await apiCall.delete('/user/delete', null, keepalive)
+  delete: async (headers?: HeadersInit) => {
+    return await apiCall.delete('/user/delete', null, headers)
   }
 })
 
 const storage = Object.freeze({
-  getFile: async(item: {relativePath: string}, range?: string, keepalive?: boolean) => {
+  getFile: async(item: {relativePath: string}, range?: string, headers?: HeadersInit) => {
     if (!get(settings).experimental.apiBeta.opt) return Promise.reject('unreachable')
-    return await apiCall.get(`/storage/${encodeURIComponent(item.relativePath)}`, keepalive)
+    const h = new Headers(headers)
+    if (range) h.set('Range', range)
+    return await apiCall.get(`/storage/${encodeURIComponent(item.relativePath)}`, h)
   }
 })
 
