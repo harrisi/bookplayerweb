@@ -60,7 +60,7 @@
   // })
 </script>
 
-<div bind:this={grid} id='grid' class='library' transition:fade>
+<div bind:this={grid} class='grid library' transition:fade>
   <slot />
   <!-- {#each items as item, index (item.id)}
     <div
@@ -189,33 +189,33 @@
 </div> -->
 
 <style>
-  #grid {
+  .grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     grid-auto-rows: auto;
-    gap: 8px;
-    margin: 8px;
+    gap: 24px;
+    margin: 24px;
   }
 
   @media screen and (max-width: 768px) {
-    #grid {
+    .grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
 
   @media screen and (min-width: 769px) and (max-width: 1175px) {
-    #grid {
+    .grid {
       grid-template-columns: repeat(3, 1fr);
     }
   }
 
-  #flex {
+  /* .flex {
     display: flex;
     flex-wrap: wrap;
     flex: 1 1 0px;
     gap: 8px;
     margin: 8px;
-  }
+  } */
 
   div * {
     user-select: none;
