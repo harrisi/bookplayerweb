@@ -7,13 +7,12 @@
     display: flex;
     align-items: center;
     position: sticky;
-    top: calc(var(--top) + 32px);
+    top: calc(var(--top) + 2rem);
     bottom: var(--bottom);
-    margin: 8px;
     z-index: 1;
     background-color: var(--systemBackground);
-    border-radius: 8px;
-    box-shadow: 0px 10px 15px rgba(0,0,0, 0.1), 0px 4px 6px rgba(0,0,0, 0.05);
+    box-shadow: 0px 4px 6px 0px rgba(0, 0, 0, 0.10);
     opacity: 1;
+    height: 68px;
   }
 </style>
