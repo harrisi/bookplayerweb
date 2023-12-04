@@ -47,6 +47,7 @@
   <div class='artwork' style={thumbnailCSS}></div>
   <div class='info'>
     <div class='text'>
+      <div class='duration'>{formatTime(item.duration ?? 1)}</div>
       <div class='title'>{item.title}</div>
       <div class='details'>{item.details}</div>
     </div>
@@ -119,19 +120,27 @@
   }
 
   .duration {
-    margin: 10px;
-    padding: 3px;
-    background-color: var(--systemBackground);
+    color: #222;
+    padding: 3px 3px 3px 0px;
     border-radius: 5px;
     opacity: 75%;
-    position: absolute;
+    width: min-content;
+    font-size: .75rem;
+    line-height: 14px;
+  }
+
+  .title {
+
+  }
+
+  .details {
+    font-size: .9rem;
   }
 
   .info {
     display: flex;
+    margin: -16px 16px;
     flex-direction: row;
-    justify-items: center;
-    align-items: center;
     height: 100%;
     grid-template-rows: 3fr 1fr auto;
     /* border-radius: 8px; */
@@ -139,12 +148,22 @@
   }
 
   .info .text {
+    display: flex;
+    flex-direction: column;
+    height: 0;
+    min-height: 100%;
+    width: 100%;
+    align-items: start;
+    gap: 6px;
+  }
+
+  /* .info .text {
     display: grid;
     grid-template-rows: 2fr 1fr;
     height: 0;
     min-height: 100%;
     width: 100%;
-  }
+  } */
 
   .info button {
     padding: 5px;
