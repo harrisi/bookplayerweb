@@ -1,15 +1,12 @@
 <script lang='ts'>
   import { library } from '$lib/api'
-  import FolderItem from './FolderItem.svelte'
-  import FileItem from './FileItem.svelte'
-  import VolumeItem from './VolumeItem.svelte'
   import Player from '../player/Player.svelte'
   import { goto } from '$app/navigation'
   import { browser } from '$app/environment'
   import { ItemType, type Item } from '$lib/types'
   import { fade } from 'svelte/transition'
   import Grid from './Grid.svelte'
-  import { onMount } from 'svelte'
+  import LibraryItem from './LibraryItem.svelte'
 
   let token = browser ? localStorage.getItem('token') : ''
   if (!token && browser) goto('/')
@@ -28,9 +25,9 @@
     }
   }
 
-  const folderClick = async (title: string) => {
+  const folderClick = async (item: Item) => {
     // we don't want to set `sign` because this modifies the ETag.
-    const resp = await library.getContent({relativePath: `${title}/`}).then(res => res.content)
+    const resp = await library.getContent({relativePath: `${item.title}/`}).then(res => res.content)
     items = resp
   }
 
@@ -52,6 +49,18 @@
   const setPlayer = (item: Item) => {
     player = item
   }
+
+  const itemClick = (item: Item) => {
+    let fn
+    switch (item.type) {
+      case ItemType.File: fn = fileClick; break
+      case ItemType.Folder: fn = folderClick; break
+      case ItemType.Volume: fn = volumeClick; break
+      default: fn = (item: Item) => console.log(item)
+    }
+
+    fn(item)
+  }
 </script>
 
 {#await loadRoot()}
@@ -65,19 +74,9 @@ loading..
   {#each [...items].sort((a, b) =>
     (a.orderRank ?? 0) - (b.orderRank ?? 0)
   ) as item, i (item.relativePath)}
-    {#if item.type === ItemType.Folder}
-      <button id={i.toString()} draggable="true" in:fade|global on:click={() => folderClick(item.title ?? '')}>
-        <FolderItem {item} />
-      </button>
-    {:else if item.type === ItemType.Volume}
-      <button id={i.toString()} draggable="true" in:fade|global on:click={() => volumeClick(item)}>
-        <VolumeItem {item} />
-      </button>
-    {:else if item.type === ItemType.File}
-      <button id={i.toString()} draggable="true" in:fade|global on:click={() => fileClick(item)}>
-        <FileItem {item} />
-      </button>
-    {/if}
+    <button id={i.toString()} draggable="true" in:fade|global on:click={() => itemClick(item)}>
+      <LibraryItem {item} />
+    </button>
   {/each}
   </Grid>
   {/key}

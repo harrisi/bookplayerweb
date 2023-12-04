@@ -6,6 +6,8 @@
   import { formatTime, getMetadata } from '$lib/util'
   import Percent from './Percent.svelte'
   import { settings } from '$lib/settings'
+    import Slider from '../player/Slider.svelte'
+    import { getStore } from '$lib/store'
 
   let thumbnail: ArrayBuffer | undefined
   let thumbnailCSS: string | undefined
@@ -37,26 +39,64 @@
     }))
   }
 
+  let store = getStore(item.relativePath, item.percentCompleted)
+
 </script>
 
-<div id='container' class='item'>
-  <div id='artwork' class='item' style={thumbnailCSS}>
-    <div class='item duration'>{formatTime(item.duration ?? 0)}</div>
-  </div>
-  <div id='info' class='item'>
-    <div id='text' class='item'>
-      <div class='item title'>{item.title}</div>
-      <div class='item details'>{item.details}</div>
+<div class='container'>
+  <div class='artwork' style={thumbnailCSS}></div>
+  <div class='info'>
+    <div class='text'>
+      <div class='title'>{item.title}</div>
+      <div class='details'>{item.details}</div>
     </div>
-    <Percent percentCompleted={item.percentCompleted ?? 0} relativePath={item.relativePath} />
-    <button style='{!$settings.general.contextMenu.opt ? 'display: inline !important;' : ''}' class='item' on:click|preventDefault|stopPropagation={emitEvent}>
+    <button style='{!$settings.general.contextMenu.opt ? 'display: inline !important;' : ''}' on:click|preventDefault|stopPropagation={emitEvent}>
       <p>...</p>
     </button>
+  </div>
+  <div class='progress'>
+    <label>
+      {Math.max(Math.min(100, (item.percentCompleted ?? 0)), 0).toFixed(2)}%
+      <progress id='progress' max={item.duration} value={$store / 100 * (item.duration ?? 1)}></progress>
+    </label>
   </div>
 </div>
 
 <style>
-  div#container{
+  label {
+    visibility: hidden;
+    height: 0px;
+  }
+
+  progress {
+    visibility: visible;
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    /* background-color: #dcdcdc; */
+    height: 5px;
+    border-radius: 6px;
+  }
+
+  .progress {
+    margin: 0px 7px 7px;
+  }
+
+  ::-webkit-progress-value {
+    background-color: #ccc;
+    border-radius: 6px;
+  }
+
+  ::-webkit-progress-bar {
+    background-color: #fff;
+    border-radius: 4px;
+  }
+
+  ::-moz-progress-bar {
+    background-color: transparent;
+  }
+
+  .container {
     display: grid;
     height: 100%;
     border-radius: 8px;
@@ -64,9 +104,11 @@
     align-items: end;
     font-size: medium;
     grid-template-rows: 4fr 1fr;
+    position: relative;
+    background-color: white;
   }
 
-  div#artwork {
+  .artwork {
     background: var(--thumbnail, linear-gradient(#37398c, #537bc4)) no-repeat;
     border-radius: 8px 8px 0px 0px;
     background-size: contain;
@@ -76,7 +118,7 @@
     aspect-ratio: 1;
   }
 
-  div#artwork .duration {
+  .duration {
     margin: 10px;
     padding: 3px;
     background-color: var(--systemBackground);
@@ -85,34 +127,38 @@
     position: absolute;
   }
 
-  div#info {
-    display: grid;
+  .info {
+    display: flex;
+    flex-direction: row;
     justify-items: center;
     align-items: center;
     height: 100%;
-    grid-template-columns: 3fr 1fr auto;
+    grid-template-rows: 3fr 1fr auto;
+    /* border-radius: 8px; */
+    background-color: #fff;
   }
 
-  div#info button {
+  .info .text {
+    display: grid;
+    grid-template-rows: 2fr 1fr;
+    height: 0;
+    min-height: 100%;
+    width: 100%;
+  }
+
+  .info button {
     padding: 5px;
     margin: 5px;
   }
 
   @media screen and (min-width: 1175px) {
-    div#info button {
+    .info button {
       display: none;
     }
   }
 
-  div#info #text {
-    display: grid;
-    grid-template-rows: 2fr 1fr;
-    height: 0;
-    min-height: 100%;
-  }
-
   @media screen and (max-width: 1175px) {
-    #text * {
+    .text * {
       text-overflow: ellipsis;
       overflow: hidden;
       white-space: nowrap;
