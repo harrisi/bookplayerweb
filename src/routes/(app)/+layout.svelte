@@ -194,111 +194,16 @@
     align-items: center;
   }
 
-  img {
-    object-fit: contain;
-    max-height: 10vh;
-  }
-
   header {
     width: 100%;
+    display: grid;
+    align-items: center;
   }
 
   nav {
     display: flex;
-    height: 10vh;
     justify-content: space-between;
     align-items: center;
     text-align: center;
   }
-
-  #betaHeader {
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    background-color: var(--accent);
-    justify-content: center;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-  }
-
-  #betaHeader p {
-    text-align: center;
-    margin: 0;
-  }
-
-  /* :global(body) {
-    margin: 0;
-    min-height: 100vh;
-    background-color: var(--systemBackground);
-    color: var(--primary);
-  }
-
-  :root {
-    --lightPrimary: #242320;
-    --lightSecondary: #8F8E95;
-    --lightAccent: #3488D1;
-    --lightSeparator: #DCDCDC;
-    --lightSystemBackground: #FAFAFA;
-    --lightSecondarySystemBackground: #FCFBFC;
-    --lightTertiarySystemBackground: #E8E7E9;
-    --lightSystemGroupedBackground: #EFEEF0;
-    --lightSystemFill: #87A0BA;
-    --lightSecondarySystemFill: #87A0BA;
-    --lightTertiarySystemFill: #3488D1;
-    --lightQuaternarySystemFill: #3488D1;
-
-    --darkPrimary: #fafbfc;
-    --darkSecondary: #8F8E94;
-    --darkAccent: #459EEC;
-    --darkSeparator: #434448;
-    --darkSystemBackground: #202225;
-    --darkSecondarySystemBackground: #111113;
-    --darkTertiarySystemBackground: #333538;
-    --darkSystemGroupedBackground: #2C2D30;
-    --darkSystemFill: #647E98;
-    --darkSecondarySystemFill: #707176;
-    --darkTertiarySystemFill: #459EEC;
-    --darkQuaternarySystemFill: #459EEC;
-  }
-
-  @media (prefers-color-scheme: light) {
-    :root {
-      --primary: var(--lightPrimary);
-      --secondary: var(--lightSecondary);
-      --accent: var(--lightAccent);
-      --separator: var(--lightSeparator);
-      --systemBackground: var(--lightSystemBackground);
-      --secondarySystemBackground: var(--lightSecondarySystemBackground);
-      --tertiarySystemBackground: var(--lightTertiarySystemBackground);
-      --systemGroupedBackground: var(--lightSystemGroupedBackground);
-      --systemFill: var(--lightSystemFill);
-      --secondarySystemFill: var(--lightSecondarySystemFill);
-      --tertiarySystemFill: var(--lightTertiarySystemFill);
-      --quaternarySystemFill: var(--lightQuaternarySystemFill);
-      --fill: 0;
-    }
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --primary: var(--darkPrimary);
-      --secondary: var(--darkSecondary);
-      --accent: var(--darkAccent);
-      --separator: var(--darkSeparator);
-      --systemBackground: var(--darkSystemBackground);
-      --secondarySystemBackground: var(--darkSecondarySystemBackground);
-      --tertiarySystemBackground: var(--darkTertiarySystemBackground);
-      --systemGroupedBackground: var(--darkSystemGroupedBackground);
-      --systemFill: var(--darkSystemFill);
-      --secondarySystemFill: var(--darkSecondarySystemFill);
-      --tertiarySystemFill: var(--darkTertiarySystemFill);
-      --quaternarySystemFill: var(--darkQuaternarySystemFill);
-      --fill: 0;
-    }
-  }
-
-  :root { font-family: 'Inter', sans-serif; }
-  @supports (font-variation-settings: normal) {
-    :root { font-family: 'Inter var', sans-serif; }
-  } */
 </style>
