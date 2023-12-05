@@ -13,6 +13,5 @@
     background-color: var(--systemBackground);
     box-shadow: 0px 4px 6px 0px rgba(0, 0, 0, 0.10);
     opacity: 1;
-    height: 68px;
   }
 </style>
