@@ -84,12 +84,12 @@
   }
 
   ::-webkit-progress-value {
-    background-color: #ccc;
+    background-color: var(--secondary);
     border-radius: 6px;
   }
 
   ::-webkit-progress-bar {
-    background-color: #fff;
+    background-color: var(--systemBackground);
     border-radius: 4px;
   }
 
@@ -106,7 +106,7 @@
     font-size: medium;
     grid-template-rows: 4fr 1fr;
     position: relative;
-    background-color: white;
+    background-color: var(--systemBackground);
   }
 
   .artwork {
@@ -120,7 +120,6 @@
   }
 
   .duration {
-    color: #222;
     padding: 3px 3px 3px 0px;
     border-radius: 5px;
     opacity: 75%;
@@ -130,7 +129,7 @@
   }
 
   .title {
-
+    font-size: 1rem;
   }
 
   .details {
@@ -144,7 +143,7 @@
     height: 100%;
     grid-template-rows: 3fr 1fr auto;
     /* border-radius: 8px; */
-    background-color: #fff;
+    background-color: var(--systemBackground);
   }
 
   .info .text {
@@ -155,6 +154,7 @@
     width: 100%;
     align-items: start;
     gap: 6px;
+    color: var(--primary);
   }
 
   /* .info .text {
