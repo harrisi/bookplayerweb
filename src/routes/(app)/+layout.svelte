@@ -34,7 +34,7 @@
 <Overlay --top=0px>
   <header>
     <nav>
-      <div id='logoContainer'>
+      <div class='logoContainer'>
         <div class='logo'>
           <svg class='svgTop' xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
             <path opacity="0.53" fill-rule="evenodd" clip-rule="evenodd" d="M24.0024 14.0588C24.0072 14.0476 24.0121 14.0365 24.0173 14.0254C24.0892 13.8692 24.1965 13.7414 24.338 13.6436C24.4794 13.5457 24.6217 13.4837 25.0303 13.412L40.4859 10.7031C40.5061 10.6995 40.5265 10.6966 40.5468 10.6943C41.1127 10.6296 41.6239 11.0359 41.6885 11.6017C41.9603 13.979 42.0962 18.1428 42.0962 24.0931C42.0962 30.0019 41.9622 34.1044 41.6942 36.4007C41.6919 36.4203 41.6891 36.4398 41.6857 36.4592C41.5873 37.0202 41.0529 37.3953 40.4919 37.2969L25.0303 34.5869C24.6217 34.5153 24.4794 34.4532 24.338 34.3554C24.1965 34.2575 24.0892 34.1298 24.0173 33.9735C24.0121 33.9624 24.0072 33.9514 24.0024 33.9402C23.9977 33.9514 23.9927 33.9624 23.9876 33.9735C23.9157 34.1298 23.8083 34.2575 23.6669 34.3554C23.5254 34.4532 23.3832 34.5153 22.9746 34.5869L7.51301 37.2969C6.95202 37.3953 6.41753 37.0202 6.31921 36.4592C6.3158 36.4398 6.31296 36.4203 6.31067 36.4007C6.04269 34.1044 5.90869 30.0019 5.90869 24.0931C5.90869 18.1428 6.04457 13.979 6.31634 11.6017C6.38102 11.0359 6.89218 10.6296 7.45804 10.6943C7.47843 10.6966 7.49874 10.6995 7.51895 10.7031L22.9746 13.412C23.3832 13.4837 23.5254 13.5457 23.6669 13.6436C23.8083 13.7414 23.9157 13.8692 23.9876 14.0254C23.9927 14.0365 23.9977 14.0476 24.0024 14.0588Z" fill="#3488D1"/>
@@ -45,32 +45,32 @@
         </div>
         <span class="logoText">BookPlayer</span>
       </div>
-      <div id='headerControls'>
-        <div id="about">
+      <div class='headerControls'>
+        <div class="about">
           <a class='headerButton' href='?about'>
             <span class="material-symbols-outlined">info</span>
             About
           </a>
         </div>
-        <div id='library'>
+        <div class='library'>
           <a class='headerButton' href='/library'>
             <span class='material-symbols-outlined'>library_books</span>
             Library
           </a>
         </div>
-        <div id='settings'>
+        <div class='settings'>
           <a class='headerButton' href='/settings'>
             <span class='material-symbols-outlined'>settings</span>
             Settings
           </a>
         </div>
-        <div id='loginout'>
-          <a class='headerButton' href='/' on:click={() => localStorage.removeItem('token')} id="logout">
+        <div class='loginout'>
+          <a class='headerButton logout' href='/' on:click={() => localStorage.removeItem('token')}>
             <span class='material-symbols-outlined'>door_open</span>
             {#if token}
               Logout
             {:else}
-              <div id="login">Login</div>
+              <div class="login">Login</div>
             {/if}
           </a>
         </div>
@@ -103,13 +103,10 @@
 
 <style>
   .logo {
-    /* background-color: #fff; */
     justify-self: center;
-    /* box-shadow: 0px 20px 46px 0px #87A0BA4A; */
     position: relative;
     width: 48px;
     height: 48px;
-    /* margin-bottom: 3.5rem; */
   }
 
   .svgTop {
@@ -126,10 +123,6 @@
     display: grid;
     grid-template-rows: auto auto 1fr auto;
     min-height: 100vh;
-  }
-
-  a.betaLink {
-    text-decoration: underline;
   }
 
   a {
@@ -169,11 +162,11 @@
     'opsz' 24
   }
 
-  div.container {
+  .container {
     display: grid;
   }
 
-  div#headerControls {
+  .headerControls {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
   }
@@ -186,7 +179,7 @@
     justify-content: space-evenly;
   }
 
-  div#logoContainer {
+  .logoContainer {
     height: inherit;
     justify-self: baseline;
     display: grid;
