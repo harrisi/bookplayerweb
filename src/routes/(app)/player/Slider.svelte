@@ -44,7 +44,7 @@
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  height: 20px;
+  height: 8px;
 }
 
 input[type='range']::-webkit-slider-thumb {
