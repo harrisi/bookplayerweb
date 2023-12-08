@@ -11,14 +11,12 @@
   })
 </script>
 
-<div id='container' bind:this={container}>
-  <div id='grid'>
-
-  </div>
+<div class='container' bind:this={container}>
+  <slot />
 </div>
 
 <style>
-  #container {
+  .container {
     z-index: 10;
     position: absolute;
     margin: 0;
