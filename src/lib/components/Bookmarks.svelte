@@ -11,18 +11,18 @@
 {#await library.getBookmarks(item)}
   loading..
 {:then bookmarks}
+  <ul>
   {#each bookmarks as bookmark (bookmark.time)}
-    <ul>
-      {#if bookmark.active}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-        <li on:click={onClick} id={bookmark.time.toString()}>
-          <p>note: {bookmark.note}</p>
-          <p>at: {bookmark.time}</p>
-        </li>
-      {/if}
-    </ul>
+    {#if bookmark.active}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+      <li on:click={onClick} id={bookmark.time.toString()}>
+        <p>note: {bookmark.note}</p>
+        <p>at: {bookmark.time}</p>
+      </li>
+    {/if}
   {/each}
+  </ul>
 {:catch err}
   {err}
 {/await}
