@@ -16,6 +16,7 @@
   import type { IAudioMetadata } from "music-metadata-browser"
   import Popup from "$lib/components/Popup.svelte"
   import Bookmarks from "$lib/components/Bookmarks.svelte"
+  import Chapters from '$lib/components/Chapters.svelte'
 
   export let item: Item
   let {
@@ -368,10 +369,11 @@
   let showing: { top: number, left: number } | undefined
   let sleepShowing: { top: number, left: number } | undefined
   let bookmarksShowing: { top: number, left: number } | undefined
+  let chaptersShowing: { top: number, left: number } | undefined
 
 </script>
 
-<Overlay --bottom='5px'>
+<Overlay --bottom='0px'>
   <div class='player'>
     <div class='left'>
       <img class='artwork' src='{thumbnail?.toString()}' alt='thumbnail for book' />
@@ -380,14 +382,49 @@
         <span class='title'>{title}</span>
         <span class='author'>{details}</span>
       </div>
+    </div>
 
+    <div class='center'>
       <div class='progressContainer'>
-        <div class='times'>
+        <div class='controls'>
+          <button class='jump previous' on:click={() => skip(-$settings.playback.skipIntervals.rewind.opt)}>
+            <span class="material-symbols-outlined">
+              forward_media
+            </span>
+          </button>
+          <button class='skip previous' on:click={() => { currentTime = 0 }}>
+            <span class="material-symbols-outlined">
+              skip_next
+            </span>
+          </button>
+          <button on:click={playPause} class='playPause'>
+            <span class="material-symbols-outlined">
+            {#if !playing}
+              play_circle
+            {:else}
+              pause_circle
+            {/if}
+            </span>
+          </button>
+          <button class='skip forward' on:click={() => { currentTime = duration }}>
+            <span class="material-symbols-outlined">
+              skip_next
+            </span>
+          </button>
+          <button class='jump forward' on:click={() => skip($settings.playback.skipIntervals.forward.opt)}>
+            <span class="material-symbols-outlined">
+              forward_media
+            </span>
+          </button>
+        </div>
+        <div class='progress'>
           <div class='currentTime'>{formatTime(currentTime)}</div>
-          <div class='currentChapter'>{(currentChapter && ((currentChapter.tags && currentChapter.tags?.title) || currentChapter.elementID)) ?? ''}</div>
+          <div class='slider'>
+            <Slider min=0 max={Math.ceil(duration)} bind:value={currentTime} bind:changing onChange={onSliderChange} />
+          </div>
           <div class='duration'>{formatTime(duration)}</div>
         </div>
-        <Slider min=0 max={Math.ceil(duration)} bind:value={currentTime} bind:changing onChange={onSliderChange} />
+        <div class='currentChapter'>{(currentChapter && ((currentChapter.tags && currentChapter.tags?.title) || currentChapter.elementID)) ?? ''}</div>
       </div>
     </div>
 
@@ -408,38 +445,6 @@
           </Popup>
         {/if}
       </label>
-
-      <button on:click={() => skip(-$settings.playback.skipIntervals.rewind.opt)}>
-        <svg class='skipReverse' viewBox='0 0 144 156'>
-          <path class='reverse'
-            d="M 58,154.44025 C 28.852681,148.15898 7.5137784,126.73372 1.5802444,97.792158 -3.4171776,73.416601 5.1212992,47.791696 23.883454,30.85778 35.229927,20.61694 47.839792,14.851346 63.587396,12.703992 l 8.32303,-1.134933 0.294787,-5.0251639 c 0.223199,-3.8048282 0.710918,-5.1042516 2.008353,-5.350837 1.71821,-0.32655597 25.709002,13.0936899 26.943914,15.0721969 1.4137,2.264944 -0.85459,4.06878 -12.38409,9.848341 -14.691884,7.364817 -16.160579,7.365183 -16.580237,0.0041 l -0.306847,-5.382271 -6.693153,0.685218 C 51.250872,22.848028 38.033046,29.265703 27.649374,39.649374 20.363481,46.935268 15.826422,54.142891 12.217015,64.165396 9.8938523,70.616292 9.5756023,73.006059 9.5756023,84 c 0,10.993941 0.31825,13.383708 2.6414127,19.8346 3.609407,10.02251 8.146466,17.23013 15.432359,24.51603 7.285894,7.28589 14.493517,11.82295 24.516022,15.43235 6.450896,2.32317 8.840663,2.64142 19.834604,2.64142 10.993941,0 13.383708,-0.31825 19.834604,-2.64142 10.022506,-3.6094 17.230126,-8.14646 24.516026,-15.43235 10.65058,-10.65059 16.97839,-23.96819 18.26348,-38.437577 C 135.34036,81.735875 136.18235,80 139.42244,80 c 4.94178,0 5.71005,4.560474 2.99732,17.792158 C 138.4493,117.15856 127.49241,133.3571 110.93527,144.33842 96.040366,154.2173 75.316862,158.17204 58,154.44025 Z"
-            id="path2" />
-          <text x='50%' y='50%' dominant-baseline='central' baseline-shift=-5 text-anchor='middle'>-{$settings.playback.skipIntervals.rewind.opt}</text>
-        </svg>
-      </button>
-
-      <button on:click={playPause} class='playPause'>
-        {#if (!playing)}
-          <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512">
-          <!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
-            <path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/>
-          </svg>
-        {:else}
-          <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 320 512">
-          <!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
-            <path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z"/>
-          </svg>
-        {/if}
-      </button>
-
-      <button on:click={() => skip(+$settings.playback.skipIntervals.forward.opt)}>
-        <svg class='skip' viewBox='0 0 144 156'>
-          <path
-            d="M 58,154.44025 C 28.852681,148.15898 7.5137784,126.73372 1.5802444,97.792158 -3.4171776,73.416601 5.1212992,47.791696 23.883454,30.85778 35.229927,20.61694 47.839792,14.851346 63.587396,12.703992 l 8.32303,-1.134933 0.294787,-5.0251639 c 0.223199,-3.8048282 0.710918,-5.1042516 2.008353,-5.350837 1.71821,-0.32655597 25.709002,13.0936899 26.943914,15.0721969 1.4137,2.264944 -0.85459,4.06878 -12.38409,9.848341 -14.691884,7.364817 -16.160579,7.365183 -16.580237,0.0041 l -0.306847,-5.382271 -6.693153,0.685218 C 51.250872,22.848028 38.033046,29.265703 27.649374,39.649374 20.363481,46.935268 15.826422,54.142891 12.217015,64.165396 9.8938523,70.616292 9.5756023,73.006059 9.5756023,84 c 0,10.993941 0.31825,13.383708 2.6414127,19.8346 3.609407,10.02251 8.146466,17.23013 15.432359,24.51603 7.285894,7.28589 14.493517,11.82295 24.516022,15.43235 6.450896,2.32317 8.840663,2.64142 19.834604,2.64142 10.993941,0 13.383708,-0.31825 19.834604,-2.64142 10.022506,-3.6094 17.230126,-8.14646 24.516026,-15.43235 10.65058,-10.65059 16.97839,-23.96819 18.26348,-38.437577 C 135.34036,81.735875 136.18235,80 139.42244,80 c 4.94178,0 5.71005,4.560474 2.99732,17.792158 C 138.4493,117.15856 127.49241,133.3571 110.93527,144.33842 96.040366,154.2173 75.316862,158.17204 58,154.44025 Z"
-            id="path1" />
-          <text x='50%' y='50%' dominant-baseline='middle' baseline-shift=-5 text-anchor='middle'>+{$settings.playback.skipIntervals.forward.opt}</text>
-        </svg>
-      </button>
 
       <button on:click|preventDefault|stopPropagation={e => {
         const target = e.target.tagName === 'DIV' ? e.target.parentNode : e.target
@@ -478,46 +483,108 @@
         <Bookmarks {item} />
       </Popup>
       {/if}
+
+      <button on:click|preventDefault|stopPropagation={e => {
+        const target = e.target.tagName === 'DIV' ? e.target.parentNode : e.target
+        chaptersShowing = chaptersShowing !== undefined ? undefined : { top: target.offsetTop, left: target.offsetLeft + target.offsetWidth / 2 }
+        console.log(chaptersShowing)
+      }}>
+        <span class="material-symbols-outlined">
+          list
+        </span>
+      </button>
+
+      {#if chaptersShowing}
+      <Popup bind:showing={chaptersShowing} title='Chapters'>
+        <Chapters {item} {chapters} />
+      </Popup>
+      {/if}
     </div>
   </div>
 </Overlay>
 
 <style>
-  .progressContainer {
-    margin: 10px;
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr;
-    width: 100%;
+  .controls {
+    display: flex;
     justify-content: center;
     align-items: center;
+    gap: 32px;
+    width: 100%;
+    margin-top: 8px;
   }
 
-  .progressContainer .times {
+  .previous {
+    transform: scaleX(-1);
+  }
+
+  .progress {
+    display: flex;
+    height: 8px;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .slider {
+    width: 100%;
+  }
+
+  .currentChapter {
+    text-align: center;
+  }
+
+  .progressContainer {
+    /* background-color: red; */
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    /* justify-content: center;
+    align-items: center; */
+    height: 69px;
+  }
+
+  /* .times {
     display: flex;
     justify-content: space-between;
     margin-bottom: 5px;
-  }
+  } */
 
   button {
     background-color: var(--systemBackground);
     color: var(--primary);
     border-radius: 5px;
-    border: 1px solid var(--primary);
-    box-shadow: 1px 1px 1px gray;
+    border: 0;
+    /* border: 1px solid var(--primary); */
+    /* box-shadow: 1px 1px 1px gray; */
     cursor: pointer;
+    transition: color 0.25s linear;
+  }
+
+  button:hover {
+    color: var(--accent);
   }
 
   .player {
+    box-shadow: 0px -2px 4px 0px rgba(0, 0, 0, 0.10);
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr 3fr 1fr;
     width: 100%;
+    height: 93px;
   }
 
   .left {
     display: flex;
     justify-content: start;
     align-items: center;
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .center {
+
   }
 
   .right {
@@ -528,8 +595,6 @@
 
   .info {
     display: grid;
-    margin-left: 10px;
-    margin-top: 10px;
   }
 
   img {
@@ -537,7 +602,7 @@
     width: 64px;
     background: linear-gradient(#37398c, #537bc4);
     border-radius: 4px;
-    margin: 16px;
+    /* margin: 16px; */
     aspect-ratio: 1;
   }
 
@@ -550,11 +615,6 @@
 
   svg text {
     font-size: 48px;
-  }
-
-  .reverse {
-    transform: scaleX(-1);
-    translate: 100%;
   }
 </style>
 
