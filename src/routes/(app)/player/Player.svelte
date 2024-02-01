@@ -418,13 +418,15 @@
           </button>
         </div>
         <div class='progress'>
-          <div class='currentTime'>{formatTime(currentTime)}</div>
           <div class='slider'>
             <Slider min=0 max={Math.ceil(duration)} bind:value={currentTime} bind:changing onChange={onSliderChange} />
           </div>
-          <div class='duration'>{formatTime(duration)}</div>
+          <div class='timesChapters'>
+            <div class='currentTime'>{formatTime(currentTime)}</div>
+            <div class='currentChapter'>{(currentChapter && ((currentChapter.tags && currentChapter.tags?.title) || currentChapter.elementID)) ?? ''}</div>
+            <div class='duration'>{formatTime(duration)}</div>
+          </div>
         </div>
-        <div class='currentChapter'>{(currentChapter && ((currentChapter.tags && currentChapter.tags?.title) || currentChapter.elementID)) ?? ''}</div>
       </div>
     </div>
 
@@ -519,12 +521,17 @@
 
   .progress {
     display: flex;
-    height: 8px;
     width: 100%;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+  }
+
+  .timesChapters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
   }
 
   .slider {
@@ -539,7 +546,6 @@
     /* background-color: red; */
     display: grid;
     grid-template-rows: 1fr 1fr 1fr;
-    gap: 10px;
     width: 100%;
     /* justify-content: center;
     align-items: center; */
