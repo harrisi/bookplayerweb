@@ -133,7 +133,7 @@
 
       if (item.relativePath?.endsWith('.mp3')) {
         const meta = metadata?.meta as NodeID3.Tags
-        chapters = meta.chapter ?? []
+        chapters = meta?.chapter ?? []
       } else {
         const meta = metadata?.meta as IAudioMetadata
         chapters = meta.format.chapters ?? []
