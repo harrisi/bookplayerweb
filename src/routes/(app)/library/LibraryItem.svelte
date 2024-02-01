@@ -6,8 +6,8 @@
   import { formatTime, getMetadata } from '$lib/util'
   import Percent from './Percent.svelte'
   import { settings } from '$lib/settings'
-    import Slider from '../player/Slider.svelte'
-    import { getStore } from '$lib/store'
+  import Slider from '../player/Slider.svelte'
+  import { getStore } from '$lib/store'
 
   let thumbnail: ArrayBuffer | undefined
   let thumbnailCSS: string | undefined
